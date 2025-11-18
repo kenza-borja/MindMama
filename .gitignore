@@ -1,0 +1,22 @@
+node_modules
+.expo/
+dist
+
+# Node
+node_modules/
+npm-debug.log
+yarn.lock
+
+# Expo / React Native
+.expo/
+.expo-shared/
+android/
+ios/
+build/
+dist/
+temp/
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
