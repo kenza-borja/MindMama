@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.1.136:4000"; // change to your machine’s IP for phones
+const API_BASE_URL = "http://192.xxx.x.xxx:4000"; // change to your machine’s IP for phones
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
