@@ -1,0 +1,28 @@
+# --- Core Framework ---
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# --- LLM Providers ---
+# OpenAI-compatible client (Groq also uses this)
+openai==1.51.0
+
+# Groq official Python SDK
+groq==0.11.0
+
+# --- Environment Variables ---
+python-dotenv==1.0.1
+
+# --- HTTP Requests (optional: back-end-to-backend calls) ---
+httpx==0.27.2
+requests==2.32.3
+
+# --- Testing ---
+pytest==8.3.3
+pytest-asyncio==0.23.8
+
+# --- Utilities ---
+tqdm==4.66.5
+orjson==3.10.7     # fast JSON (used by FastAPI response)
+services
