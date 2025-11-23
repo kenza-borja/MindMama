@@ -1,143 +1,296 @@
-# HommieHelp
+MindMama — Meal Planning & Mental Load Reduction App
 
-## 🎯 Overview
+A cross-functional project combining:
 
-HommieHelp is an AI-powered meal planning assistant designed to reduce the mental load of household management. It uses advanced language models to:
+React Native frontend
 
-- Generate personalized meal suggestions based on dietary preferences and time constraints
-- Extract structured recipes from unstructured text
-- Create consolidated shopping lists with intelligent ingredient aggregation
-- Provide supportive, encouraging messages for daily planning
+Node.js (Express) backend
 
-Built for the **Mom's Mental Load Hackathon**, this API serves as the backend for a comprehensive meal planning solution.
+FastAPI AI Orchestrator (LLM-powered)
 
----
+Firestore database
 
-## ✨ Features
+Canonical ingredient mapper + shopping list generator
 
-### 🤖 AI-Powered Meal Suggestions
-- Generate recipes based on meal type, servings, time available, and dietary restrictions
-- Personalized recommendations using GPT-4o-mini or Llama 3.1
-- Context-aware suggestions with practical cooking instructions
+The goal is to help parents reduce mental load by automatically generating weekly meal plans and a clean, organized shopping list.
 
-### 📝 Recipe Extraction
-- Convert unstructured recipe text into structured data
-- Parse ingredients with quantities and cooking steps
-- Handle recipes from websites, cookbooks, or manual entry
+📁 Project Structure
+MindMama/
+│
+├── backend/                 # Node.js + Express API
+│   ├── src/
+│   │   ├── api/             # routes, controllers, middlewares
+│   │   ├── config/          # firebase + orchestrator client
+│   │   ├── db/              # Firestore access layer
+│   │   ├── services/        # business logic for each slice
+│   │   ├── index.js         # app bootstrap
+│   │   └── app.js           # express setup
+│   └── package.json
+│
+├── ai-orchestrator/         # FastAPI service calling LLMs
+│   ├── src/
+│   │   ├── app/             # fastapi endpoints
+│   │   ├── services/        # llm client, ingredient utils
+│   │   ├── prompts/         # prompt templates
+│   │   └── models.py        # pydantic schemas
+│   └── main.py
+│
+├── frontend/                # React Native app
+│   ├── app/                 # screens, components, hooks
+│   ├── assets/
+│   └── package.json
+│
+└── README.md                # THIS FILE
 
-### 🛒 Smart Shopping Lists
-- **Intelligent aggregation**: Combines quantities from multiple recipes
-- **Ingredient normalization**: "vine tomatoes" → "tomato"
-- **Unit standardization**: "tbsp" → "tablespoon"
-- **Category organization**: Groups by produce, pantry, dairy, etc.
-- **Duplicate elimination**: No redundant items
+🔧 Technologies
+Frontend
 
-### 💬 Supportive Messaging
-- Generate encouraging messages for meal planning
-- Context-aware and genuinely helpful (not cheesy!)
-- Acknowledges the mental load of household management
+React Native (Expo or CLI)
 
-### 🔧 Robust Engineering
-- Comprehensive error handling with retry logic
-- Automatic JSON validation with Pydantic
-- Extensive test coverage (14 tests passing)
-- Interactive API documentation with Swagger UIg
+Context API or Zustand (state)
 
-## 🚀 Quick Start
+Fetch API for backend calls
 
-### Prerequisites
-- Python 3.9 or higher
-- OpenAI API key OR Groq API key (both work)
+Backend (Node.js)
 
-### API Key Options
+Express
 
-**Option 1: Groq (Recommended for Development)**
-- ✅ Completely free
-- ✅ No credit card required
-- ✅ Very fast inference
-- 🔗 Get key: https://console.groq.com/
+Firestore SDK (firebase-admin)
 
-**Option 2: OpenAI**
-- 💳 Requires credit card ($5 minimum)
-- ✅ Most reliable for production
-- ✅ Latest GPT models
-- 🔗 Get key: https://platform.openai.com/api-keys
+Axios for AI service communication
+
+Modular service/controller/db structure
+
+AI Orchestrator
+
+FastAPI
+
+OpenAI / Groq / other LLM client
+
+Ingredient normalization + alias mapping
+
+Pydantic for validation
+
+Database
+
+Google Firestore (NoSQL)
+
+🚀 How to Run Everything
+1. Backend Setup (Node.js)
+cd backend
+npm install
 
 
+Create .env:
 
-### Installation
+PORT=4000
+AI_URL=http://localhost:8000
+FIREBASE_SERVICE_ACCOUNT={...one-line JSON...}
 
-1. **Clone this repository**
-```bash
-git clone 
-cd HommieHelp
-```
 
-2. **Create virtual environment**
-```bash
-python -m venv venv
+Run backend:
 
-# On Mac/Linux:
-source venv/bin/activate
+npm start
 
-# On Windows:
-venv\Scripts\activate
-```
 
-3. **Install dependencies**
-```bash
+Backend will be on:
+
+http://localhost:4000
+
+2. AI Orchestrator Setup (FastAPI)
+cd ai-orchestrator
 pip install -r requirements.txt
-```
 
-4. **Set up environment variables**
-```bash
-# Copy the example env file
-cp .env.example .env
 
-# Edit .env and add your API key
-# Get OpenAI key: https://platform.openai.com/api-keys
-# OR get Groq key (free): https://console.groq.com/
-```
+Create .env:
 
-5. **Run the server**
-```bash
-python main.py
-```
+OPENAI_API_KEY=...
+MODEL_NAME=gpt-4o-mini
 
-6. **Test it!**
-Open your browser to: `http://localhost:8000/docs`
 
-You'll see interactive API documentation where you can test everything!
+Run:
 
-## 📁 Project Structure
-```
-HommieHelp/
-│
-├── src/                                    # Source code directory
-│   ├── app/                                # Main application package
-│   │   ├── __init__.py                     # Package initializer
-│   │   ├── main.py                         # FastAPI application & endpoints
-│   │   ├── config.py                       # Configuration settings
-│   │   ├── models.py                       # Pydantic data models
-│   │   └── prompts.py                      # AI prompt templates
-│   │
-│   ├── services/                           # Business logic & services
-│   │   ├── __init__.py                     # Package initializer
-│   │   ├── llm_client.py                   # OpenAI/Groq API wrapper
-│   │   └── utils.py                        # Ingredient normalization & aggregation
-│   │
-│   ├── Data/                               # Data files
-│   │   ├── IngredientCanonicalMap.json     # Ingredient name mappings
-│   │   ├── UnitNormalizationMap.json       # Unit standardization rules
-│   │   └── DummyIngredientData.csv         # Sample ingredient data
-│   │
-│   ├── tests/                              # Test suite
-│   │   ├── test_api.py                     # API endpoint tests
-│   │   └── test_connection.py              # Connection & setup tests
-│   │
-│   └── .env                                # Environment variables (API keys)
-│
-├── README.md                               # Project documentation
-├── requirements.txt                        # Python dependencies
-└── .venv/                                  # Virtual environment (not in repo)
-```
+uvicorn src.app.main:app --reload --port 8000
+
+
+Should run at:
+
+http://localhost:8000
+
+
+Test:
+
+curl http://localhost:8000/ai/test
+
+3. Frontend Setup (React Native)
+cd frontend
+npm install
+npm start
+
+
+Expo will launch on:
+
+http://localhost:19000
+
+
+The frontend will call:
+
+GET http://localhost:4000/...
+
+POST http://localhost:4000/...
+
+🧩 Backend API Documentation
+
+These endpoints form the core of the app.
+
+🟩 Slice 1 — Plans (Complete)
+POST /plans
+
+Create a new meal plan.
+
+Body:
+
+{
+  "startDate": "2025-02-01",
+  "days": [
+    { "date": "2025-02-01", "meals": ["Lunch", "Dinner"] }
+  ]
+}
+
+GET /plans/:id
+
+Fetch a plan document from Firestore.
+
+🟦 Slice 2 — Attach Meals (AI + Saved)
+POST /plans/:id/meals/saved
+
+Attach an existing recipe to a plan slot.
+
+{
+  "date": "2025-02-01",
+  "label": "Lunch",
+  "recipeId": "recipe123"
+}
+
+POST /plans/:id/meals/ai
+
+Generate an AI meal + attach it.
+
+{
+  "date": "2025-02-01",
+  "label": "Dinner",
+  "preferences": {
+    "time_limit_minutes": 30,
+    "dietary_preferences": [],
+    "notes": "Quick and easy"
+  }
+}
+
+
+Backend flow:
+
+Calls AI Orchestrator /ai/suggest-meal
+
+Receives a RecipeDraft
+
+Saves it in Firestore (source: "ai")
+
+Adds { label, recipeId } to the plan
+
+🟧 Slice 3 — Shopping List
+POST /shopping-list/:planId
+
+Generates a canonical, aggregated list.
+
+Backend does:
+
+Load plan
+
+Load recipes referenced by plan
+
+Send to AI Orchestrator /ai/generate-shopping-list
+
+Example response:
+
+{
+  "items": [
+    { "canonical_name": "tomato", "quantity": 5, "unit": "piece", "category": "produce" }
+  ]
+}
+
+🟨 Recipes (Saved & Extracted)
+GET /recipes
+
+Returns all saved recipes (manual + AI + extracted).
+
+POST /recipes/manual
+
+Save user-written recipe.
+
+POST /recipes/extract
+
+Send pasted text to AI:
+
+{"raw_text": "2 tomatoes chopped...\n1 onion..."}
+
+
+AI Orchestrator extracts ingredients + steps.
+
+🤖 AI Orchestrator Responsibilities
+
+The FastAPI service ensures:
+
+Consistent, strict JSON (never paragraphs)
+
+Prompt templates for:
+
+meal suggestions
+
+recipe extraction
+
+supportive messages
+
+Ingredient normalization via canonical maps
+
+Unit normalization
+
+Retry and validation of LLM responses
+
+Returns RecipeDraft objects that backend can save directly
+
+This keeps AI separate from business logic → backend stays stable.
+
+
+🧪 Testing Instructions
+Backend
+
+Use Postman or curl:
+
+curl http://localhost:4000/plans/<id>
+
+AI Orchestrator test
+curl http://localhost:8000/ai/test
+
+Full e2e test
+
+Create plan
+
+Add AI meal
+
+Add manual recipe
+
+Attach recipe
+
+Generate shopping list
+
+📌 Notes
+
+Never commit .env or Firebase keys
+
+Always install dependencies inside each subfolder
+
+Backend requires Node 18+
+
+AI orchestrator requires Python 3.10+
+
+You can add /plans/:id/full later for easier frontend work
