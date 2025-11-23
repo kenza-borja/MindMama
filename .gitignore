@@ -1,61 +1,97 @@
-# Environment variables (CRITICAL - contains API keys!)
+############################
+# Global ignores
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Environment variables
+############################
 .env
+*.env
+**/.env
 
+############################
+# Firebase
+############################
+firebase-key.json
+serviceAccountKey.json
+*.json
+# (Be careful but this prevents accidental key commits)
+!package.json
+!package-lock.json
 
-# Python
+############################
+# NodeJS / React Native / JavaScript
+############################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Metro bundler / React Native
+.expo/
+expo/
+.expo-shared/
+*.expo
+*.jks
+*.p12
+
+# Build output
+dist/
+build/
+android/
+ios/
+*.apk
+*.aab
+
+############################
+# Python / FastAPI
+############################
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
+.venv/
+pyvenv.cfg
+*.egg-info/
+
+# Python build
 build/
 develop-eggs/
 dist/
 downloads/
-eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
 wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# Virtual environments
-venv/
-env/
-ENV/
-.venv
+# Python cache
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.coverage
+*.cover
+htmlcov/
 
-# IDE
+############################
+# Logs & temp
+############################
+*.log
+logs/
+*.tmp
+tmp/
+temp/
+
+############################
+# IDEs / Editors
+############################
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-*.cover
-
-# Logs
-*.log
-logs/
-
-# Temporary files
-*.tmp
-temp/
-tmp/
-
-
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
