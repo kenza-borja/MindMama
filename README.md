@@ -1,293 +1,330 @@
-MindMama — Meal Planning & Mental Load Reduction App
+# MindMama Backend
 
-A cross-functional project combining:
+This is the Node.js backend for the MindMama meal-planning system. It provides Firestore data storage, plan and recipe management, and integration with the AI Orchestrator (FastAPI).
 
-React Native frontend
+---
 
-Node.js (Express) backend
+## How to Run the Entire System
 
-FastAPI AI Orchestrator (LLM-powered)
+### 1. Clone the repository
 
-Firestore database
+~~~
+git clone <repo-url>
+cd MindMama
+~~~
 
-Canonical ingredient mapper + shopping list generator
+### 2. Start the AI Orchestrator (Python / FastAPI)
 
-The goal is to help parents reduce mental load by automatically generating weekly meal plans and a clean, organized shopping list.
+Inside the `ai/` directory:
 
-📁 Project Structure
-MindMama/
-│
-├── backend/                 # Node.js + Express API
-│   ├── src/
-│   │   ├── api/             # routes, controllers, middlewares
-│   │   ├── config/          # firebase + orchestrator client
-│   │   ├── db/              # Firestore access layer
-│   │   ├── services/        # business logic for each slice
-│   │   ├── index.js         # app bootstrap
-│   │   └── app.js           # express setup
-│   └── package.json
-│
-├── ai-orchestrator/         # FastAPI service calling LLMs
-│   ├── src/
-│   │   ├── app/             # fastapi endpoints
-│   │   ├── services/        # llm client, ingredient utils
-│   │   ├── prompts/         # prompt templates
-│   │   └── models.py        # pydantic schemas
-│   └── main.py
-│
-├── frontend/                # React Native app
-│   ├── app/                 # screens, components, hooks
-│   ├── assets/
-│   └── package.json
-│
-└── README.md                # THIS FILE
+~~~
+cd ai
+python -m venv .venv
+.venv/Scripts/activate     # Windows
+pip install -r requirements.txt
+uvicorn ai.app.main:app --reload --port 8000
+~~~
 
-🔧 Technologies
-Frontend
+The AI server will be available at:
 
-React Native (Expo or CLI)
+~~~
+http://localhost:8000
+~~~
 
-Context API or Zustand (state)
+### 3. Start the Backend (Node.js / Express)
 
-Fetch API for backend calls
+Inside the `backend/` directory:
 
-Backend (Node.js)
-
-Express
-
-Firestore SDK (firebase-admin)
-
-Axios for AI service communication
-
-Modular service/controller/db structure
-
-AI Orchestrator
-
-FastAPI
-
-OpenAI / Groq / other LLM client
-
-Ingredient normalization + alias mapping
-
-Pydantic for validation
-
-Database
-
-Google Firestore (NoSQL)
-
-🚀 How to Run Everything
-1. Backend Setup (Node.js)
+~~~
 cd backend
 npm install
+npm start
+~~~
 
+Backend will start at:
 
-Create .env:
+~~~
+http://localhost:4000
+~~~
 
+Make sure your `.env` file exists and contains your Firebase credentials.
+
+### 4. Test Everything
+
+Use Postman or Thunder Client:
+
+- Test backend:
+  ~~~
+  GET http://localhost:4000/recipes
+  ~~~
+
+- Test AI:
+  ~~~
+  POST http://localhost:8000/ai/suggest-meal
+  ~~~
+
+---
+
+## Project Structure
+
+~~~
+backend/
+  src/
+    api/
+      controllers/
+      routes/
+      middlewares/
+    config/
+      env.js
+      firebase.js
+      orchestrator.js
+    db/
+      plans.db.js
+      recipes.db.js
+    services/
+      meal-planner.service.js
+      recipes.service.js
+      shopping-list.service.js
+      today.service.js
+    app.js
+    index.js
+~~~
+
+---
+
+## Requirements
+
+- Node.js (v18+)
+- Firebase Service Account (.env)
+- AI Orchestrator running on port 8000
+
+---
+
+## Environment Variables
+
+Create `.env` in backend:
+
+~~~
 PORT=4000
 AI_URL=http://localhost:8000
-FIREBASE_SERVICE_ACCOUNT={...one-line JSON...}
 
+FIREBASE_SERVICE_ACCOUNT={
+  "type": "service_account",
+  "project_id": "YOUR_PROJECT_ID",
+  "private_key_id": "YOUR_KEY_ID",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nXXX\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk@YOUR_PROJECT_ID.iam.gserviceaccount.com",
+  "client_id": "000000",
+  "token_uri": "https://oauth2.googleapis.com/token"
+}
+~~~
 
-Run backend:
+---
 
-npm start
+## Running the Backend
 
-
-Backend will be on:
-
-http://localhost:4000
-
-2. AI Orchestrator Setup (FastAPI)
-cd ai-orchestrator
-pip install -r requirements.txt
-
-
-Create .env:
-
-OPENAI_API_KEY=...
-MODEL_NAME=gpt-4o-mini
-
-
-Run:
-
-uvicorn src.app.main:app --reload --port 8000
-
-
-Should run at:
-
-http://localhost:8000
-
-
-Test:
-
-curl http://localhost:8000/ai/test
-
-3. Frontend Setup (React Native)
-cd frontend
+~~~
 npm install
 npm start
+~~~
 
+Backend runs at:
 
-Expo will launch on:
+~~~
+http://localhost:4000
+~~~
 
-http://localhost:19000
+---
 
+## API Overview
 
-The frontend will call:
+### Plans
 
-GET http://localhost:4000/...
+#### Create a plan
 
-POST http://localhost:4000/...
-
-🧩 Backend API Documentation
-
-These endpoints form the core of the app.
-
-🟩 Slice 1 — Plans (Complete)
+~~~
 POST /plans
+~~~
 
-Create a new meal plan.
+Example body:
 
-Body:
-
+~~~json
 {
   "startDate": "2025-02-01",
   "days": [
-    { "date": "2025-02-01", "meals": ["Lunch", "Dinner"] }
+    {
+      "date": "2025-02-01",
+      "meals": ["Lunch", "Dinner"]
+    }
   ]
 }
+~~~
 
+#### Get a plan
+
+~~~
 GET /plans/:id
+~~~
 
-Fetch a plan document from Firestore.
+#### Add saved meal to a plan
 
-🟦 Slice 2 — Attach Meals (AI + Saved)
+~~~
 POST /plans/:id/meals/saved
+~~~
 
-Attach an existing recipe to a plan slot.
+Body:
 
+~~~json
 {
   "date": "2025-02-01",
   "label": "Lunch",
-  "recipeId": "recipe123"
+  "recipeId": "existingRecipeId"
 }
+~~~
 
+---
+
+## AI Meal Generation (Slice 2)
+
+The backend integrates with the AI Orchestrator (FastAPI) to generate complete recipes.
+
+### Add an AI meal to a plan
+
+~~~
 POST /plans/:id/meals/ai
+~~~
 
-Generate an AI meal + attach it.
+Example request:
 
+~~~json
 {
   "date": "2025-02-01",
   "label": "Dinner",
   "preferences": {
-    "time_limit_minutes": 30,
-    "dietary_preferences": [],
-    "notes": "Quick and easy"
+    "num_people": 2,
+    "time_available": 45,
+    "dietary_restrictions": [],
+    "preferences_text": "Moroccan"
   }
 }
+~~~
 
+### Expected Flow
 
-Backend flow:
+1. Backend sends MealSuggestionRequest to FastAPI:
+   ~~~
+   POST http://localhost:8000/ai/suggest-meal
+   ~~~
+2. AI returns:
+   - title  
+   - ingredients[]  
+   - steps[]  
+   - prep_time  
+   - cook_time  
+3. Backend saves recipe into Firestore (`recipes`)
+4. Backend attaches `recipeId` to the plan
 
-Calls AI Orchestrator /ai/suggest-meal
+---
 
-Receives a RecipeDraft
+## Recipes
 
-Saves it in Firestore (source: "ai")
+#### List all recipes
 
-Adds { label, recipeId } to the plan
+~~~
+GET /recipes
+~~~
 
-🟧 Slice 3 — Shopping List
-POST /shopping-list/:planId
+#### Save custom user recipe
 
-Generates a canonical, aggregated list.
+~~~
+POST /recipes
+~~~
 
-Backend does:
+---
 
-Load plan
+## Firestore Data Model
 
-Load recipes referenced by plan
+### plans collection
 
-Send to AI Orchestrator /ai/generate-shopping-list
-
-Example response:
-
+~~~
 {
-  "items": [
-    { "canonical_name": "tomato", "quantity": 5, "unit": "piece", "category": "produce" }
+  id: string,
+  startDate: string,
+  days: [
+    {
+      date: string,
+      meals: [
+        "Lunch",
+        { label: "Dinner", recipeId: "abc123" }
+      ]
+    }
   ]
 }
+~~~
 
-🟨 Recipes (Saved & Extracted)
-GET /recipes
+### recipes collection
 
-Returns all saved recipes (manual + AI + extracted).
+~~~
+{
+  id: string,
+  title: string,
+  ingredients: [],
+  steps: [],
+  prep_time: number,
+  cook_time: number,
+  source: "ai" | "user"
+}
+~~~
 
-POST /recipes/manual
+---
 
-Save user-written recipe.
+## Development Notes
 
-POST /recipes/extract
+### Slice 1 (Completed)
 
-Send pasted text to AI:
+- Plan creation  
+- Plan retrieval  
+- Add saved meals  
+- Save user recipes  
 
-{"raw_text": "2 tomatoes chopped...\n1 onion..."}
+### Slice 2 (Completed)
 
+- AI recipe generation  
+- Save AI recipes to Firestore  
+- Attach AI meals to plan slots  
 
-AI Orchestrator extracts ingredients + steps.
+### Upcoming Slices
 
-🤖 AI Orchestrator Responsibilities
+- Shopping list generator  
+- Today/Planner service  
+- Frontend integration  
 
-The FastAPI service ensures:
+---
 
-Consistent, strict JSON (never paragraphs)
+## Tests
 
-Prompt templates for:
+~~~
+npm test
+~~~
 
-meal suggestions
+---
 
-recipe extraction
+## Code Quality Guide
 
-supportive messages
+- Services = business logic  
+- Controllers = HTTP request/response  
+- DB files = Firestore operations  
+- Config = environment + external clients  
 
-Ingredient normalization via canonical maps
+---
 
-Unit normalization
+## Deployment (Later)
 
-Retry and validation of LLM responses
+- Firebase Hosting  
+- Cloud Run or Render  
+- Environment separation (dev/stage/prod)
 
-Returns RecipeDraft objects that backend can save directly
-
-This keeps AI separate from business logic → backend stays stable.
-
-
-🧪 Testing Instructions
-Backend
-
-Use Postman or curl:
-
-curl http://localhost:4000/plans/<id>
-
-AI Orchestrator test
-curl http://localhost:8000/ai/test
-
-Full e2e test
-
-Create plan
-
-Add AI meal
-
-Add manual recipe
-
-Attach recipe
-
-Generate shopping list
-
-📌 Notes
-
-Never commit .env or Firebase keys
-
-Always install dependencies inside each subfolder
+---
 
 Backend requires Node 18+
 
