@@ -15,13 +15,28 @@ export async function addMealFromSaved({ planId, date, label, recipeId }) {
 }
 
 export async function addMealFromAi({ planId, date, label, preferences }) {
-  const { data } = await aiClient.post("/ai/suggest-meal", preferences);
+  const body = {
+    meal_type: preferences?.meal_type || label.toLowerCase(),         
+    num_people: preferences?.num_people ?? 2,
+    time_available:
+      preferences?.time_available ?? preferences?.time_limit_minutes ?? 30,
+    dietary_restrictions:
+      preferences?.dietary_restrictions ?? preferences?.dietary_preferences ?? [],
+    preferences: preferences?.preferences_text ?? preferences?.notes ?? "",
+  };
 
-  const recipeDraft = data.recipe || data;
+  const { data } = await aiClient.post("/ai/suggest-meal", body);
+
+
+  const recipeDraft = data;
 
   const recipeId = await recipesDb.createRecipe({
-    ...recipeDraft,
-    source: "ai"
+    title: recipeDraft.title,
+    ingredients: recipeDraft.ingredients,
+    steps: recipeDraft.steps,
+    prep_time: recipeDraft.prep_time,
+    cook_time: recipeDraft.cook_time,
+    source: "ai",
   });
 
   return plansDb.addMeal(planId, date, { label, recipeId });
