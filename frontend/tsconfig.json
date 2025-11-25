@@ -1,0 +1,24 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "types": [
+      "nativewind/types"
+    ],
+    // --- START: Added lines to fix path aliases ---
+    "baseUrl": ".",
+    "paths": {
+      // Maps the alias "@/lib/utils" to the actual file path "./lib/utils"
+      // This should resolve the error.
+      "@/lib/*": ["lib/*"],
+      // Optional: If you use an alias for components too
+      "@/components/*": ["components/*"]
+    }
+    // --- END: Added lines to fix path aliases ---
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "nativewind-env.d.ts"
+  ]
+}
