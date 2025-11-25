@@ -1,162 +1,296 @@
-# MindMama
+MindMama — Meal Planning & Mental Load Reduction App
 
-mobile/ → React Native (Expo) app
+A cross-functional project combining:
 
-api/ → Node.js + Express backend API
+React Native frontend
 
-This README explains how to install, run, test, and develop both projects.
+Node.js (Express) backend
 
-🚀 Requirements
+FastAPI AI Orchestrator (LLM-powered)
 
-Make sure you have these installed:
+Firestore database
 
-Node.js (LTS recommended)
+Canonical ingredient mapper + shopping list generator
 
-npm or yarn
+The goal is to help parents reduce mental load by automatically generating weekly meal plans and a clean, organized shopping list.
 
-Git
+📁 Project Structure
+MindMama/
+│
+├── backend/                 # Node.js + Express API
+│   ├── src/
+│   │   ├── api/             # routes, controllers, middlewares
+│   │   ├── config/          # firebase + orchestrator client
+│   │   ├── db/              # Firestore access layer
+│   │   ├── services/        # business logic for each slice
+│   │   ├── index.js         # app bootstrap
+│   │   └── app.js           # express setup
+│   └── package.json
+│
+├── ai-orchestrator/         # FastAPI service calling LLMs
+│   ├── src/
+│   │   ├── app/             # fastapi endpoints
+│   │   ├── services/        # llm client, ingredient utils
+│   │   ├── prompts/         # prompt templates
+│   │   └── models.py        # pydantic schemas
+│   └── main.py
+│
+├── frontend/                # React Native app
+│   ├── app/                 # screens, components, hooks
+│   ├── assets/
+│   └── package.json
+│
+└── README.md                # THIS FILE
 
-Expo CLI (installed automatically when running npx expo)
+🔧 Technologies
+Frontend
 
-Android device OR Android emulator (if running the mobile app)
+React Native (Expo or CLI)
 
-Local network access (phone & laptop on same WiFi)
+Context API or Zustand (state)
 
-📦 Installation
+Fetch API for backend calls
 
-Clone the project:
+Backend (Node.js)
 
-git clone <your-repo-url>
-cd MindMama
+Express
 
+Firestore SDK (firebase-admin)
 
-Install dependencies for both apps:
+Axios for AI service communication
 
-API
-cd api
+Modular service/controller/db structure
+
+AI Orchestrator
+
+FastAPI
+
+OpenAI / Groq / other LLM client
+
+Ingredient normalization + alias mapping
+
+Pydantic for validation
+
+Database
+
+Google Firestore (NoSQL)
+
+🚀 How to Run Everything
+1. Backend Setup (Node.js)
+cd backend
 npm install
 
-Mobile App
-cd ../mobile
-npm install
 
-▶️ Running the API (Backend)
+Create .env:
 
-Inside the api/ folder:
+PORT=4000
+AI_URL=http://localhost:8000
+FIREBASE_SERVICE_ACCOUNT={...one-line JSON...}
+
+
+Run backend:
 
 npm start
 
 
-The backend will run at:
-
-http://0.0.0.0:4000
-
-
-If accessing it on your laptop:
+Backend will be on:
 
 http://localhost:4000
 
-
-If accessing it from your phone:
-
-http://YOUR_LAPTOP_IP:4000
-
-
-(You can find your local IP by running ipconfig.)
-
-▶️ Running the Mobile App
-
-Inside the mobile/ folder:
-
-npx expo start
+2. AI Orchestrator Setup (FastAPI)
+cd ai-orchestrator
+pip install -r requirements.txt
 
 
-Then choose one of these:
+Create .env:
 
-Press w to run in a browser
-
-Press a to run on Android emulator
-
-Scan the QR code with Expo Go on your physical phone
-
-Make sure your phone and laptop are on the same WiFi and Norton/firewall is not blocking the local API port (4000).
-
-🔌 Connecting Mobile App → API
-
-In your mobile app’s configuration file (usually constants.js, .env, or inside fetch calls):
-
-Set the backend base URL to your laptop’s IP:
-
-export const API_URL = "http://YOUR_LAPTOP_IP:4000";
+OPENAI_API_KEY=...
+MODEL_NAME=gpt-4o-mini
 
 
-Example:
+Run:
 
-export const API_URL = "http://192.163.1.136:4000";
-
-🧪 Testing
-
-If you add tests later:
-
-npm test
+uvicorn src.app.main:app --reload --port 8000
 
 
-📝 Git Guidelines
-Commit messages
+Should run at:
 
-Use simple, readable commit messages like:
-
-feat: add API server setup
-fix: backend not reachable on network
-chore: clean up build folders
-refactor: simplify API routes
-
-Branch workflow
-
-Create a branch
-
-git checkout -b feature/something
+http://localhost:8000
 
 
-Make changes, commit
+Test:
 
-git add .
-git commit -m "feat: description of work"
+curl http://localhost:8000/ai/test
 
-
-Push
-
-git push origin feature/something
-
-
-Open a Pull Request
-
-Write what you changed
-
-Mention any issues it fixes
-
-Include screenshots if needed
+3. Frontend Setup (React Native)
+cd frontend
+npm install
+npm start
 
 
-📣 Troubleshooting
-Backend not reachable from phone
+Expo will launch on:
 
-Ensure both devices are on same WiFi
+http://localhost:19000
 
-Use your local IP, not localhost
 
-Allow port 4000 through firewall
+The frontend will call:
 
-Disable or whitelist the API in Norton
+GET http://localhost:4000/...
 
-Android emulator not detected
+POST http://localhost:4000/...
 
-Start it manually from Android Studio:
+🧩 Backend API Documentation
 
-Device Manager → Start Emulator
+These endpoints form the core of the app.
 
-Expo app stuck loading
+🟩 Slice 1 — Plans (Complete)
+POST /plans
 
-Clear Metro cache:
+Create a new meal plan.
 
-npx expo start --clear
+Body:
+
+{
+  "startDate": "2025-02-01",
+  "days": [
+    { "date": "2025-02-01", "meals": ["Lunch", "Dinner"] }
+  ]
+}
+
+GET /plans/:id
+
+Fetch a plan document from Firestore.
+
+🟦 Slice 2 — Attach Meals (AI + Saved)
+POST /plans/:id/meals/saved
+
+Attach an existing recipe to a plan slot.
+
+{
+  "date": "2025-02-01",
+  "label": "Lunch",
+  "recipeId": "recipe123"
+}
+
+POST /plans/:id/meals/ai
+
+Generate an AI meal + attach it.
+
+{
+  "date": "2025-02-01",
+  "label": "Dinner",
+  "preferences": {
+    "time_limit_minutes": 30,
+    "dietary_preferences": [],
+    "notes": "Quick and easy"
+  }
+}
+
+
+Backend flow:
+
+Calls AI Orchestrator /ai/suggest-meal
+
+Receives a RecipeDraft
+
+Saves it in Firestore (source: "ai")
+
+Adds { label, recipeId } to the plan
+
+🟧 Slice 3 — Shopping List
+POST /shopping-list/:planId
+
+Generates a canonical, aggregated list.
+
+Backend does:
+
+Load plan
+
+Load recipes referenced by plan
+
+Send to AI Orchestrator /ai/generate-shopping-list
+
+Example response:
+
+{
+  "items": [
+    { "canonical_name": "tomato", "quantity": 5, "unit": "piece", "category": "produce" }
+  ]
+}
+
+🟨 Recipes (Saved & Extracted)
+GET /recipes
+
+Returns all saved recipes (manual + AI + extracted).
+
+POST /recipes/manual
+
+Save user-written recipe.
+
+POST /recipes/extract
+
+Send pasted text to AI:
+
+{"raw_text": "2 tomatoes chopped...\n1 onion..."}
+
+
+AI Orchestrator extracts ingredients + steps.
+
+🤖 AI Orchestrator Responsibilities
+
+The FastAPI service ensures:
+
+Consistent, strict JSON (never paragraphs)
+
+Prompt templates for:
+
+meal suggestions
+
+recipe extraction
+
+supportive messages
+
+Ingredient normalization via canonical maps
+
+Unit normalization
+
+Retry and validation of LLM responses
+
+Returns RecipeDraft objects that backend can save directly
+
+This keeps AI separate from business logic → backend stays stable.
+
+
+🧪 Testing Instructions
+Backend
+
+Use Postman or curl:
+
+curl http://localhost:4000/plans/<id>
+
+AI Orchestrator test
+curl http://localhost:8000/ai/test
+
+Full e2e test
+
+Create plan
+
+Add AI meal
+
+Add manual recipe
+
+Attach recipe
+
+Generate shopping list
+
+📌 Notes
+
+Never commit .env or Firebase keys
+
+Always install dependencies inside each subfolder
+
+Backend requires Node 18+
+
+AI orchestrator requires Python 3.10+
+
+You can add /plans/:id/full later for easier frontend work
