@@ -1,0 +1,262 @@
+{
+  "tomato": {
+    "variations": ["tomatoes", "vine tomato", "cherry tomato", "roma tomato", "fresh tomato", "chopped tomato", "diced tomato", "frozen tomato"],
+    "category": "produce"
+  },
+  "onion": {
+    "variations": ["onions", "red onion", "white onion", "yellow onion", "chopped onion", "sliced onion", "diced onion"],
+    "category": "produce"
+  },
+  "garlic": {
+    "variations": ["garlic cloves", "clove of garlic", "minced garlic", "crushed garlic", "fresh garlic"],
+    "category": "produce"
+  },
+  "potato": {
+    "variations": ["potatoes", "baby potato", "new potato", "sweet potato", "peeled potato", "boiled potato"],
+    "category": "produce"
+  },
+  "carrot": {
+    "variations": ["carrots", "baby carrot", "chopped carrot", "diced carrot", "grated carrot"],
+    "category": "produce"
+  },
+  "bell pepper": {
+    "variations": ["capsicum", "red pepper", "green pepper", "yellow pepper", "chopped bell pepper"],
+    "category": "produce"
+  },
+  "spinach": {
+    "variations": ["baby spinach", "fresh spinach", "frozen spinach", "chopped spinach"],
+    "category": "produce"
+  },
+  "broccoli": {
+    "variations": ["broccoli florets", "chopped broccoli", "fresh broccoli"],
+    "category": "produce"
+  },
+  "cucumber": {
+    "variations": ["cucumbers", "sliced cucumber", "english cucumber"],
+    "category": "produce"
+  },
+  "lettuce": {
+    "variations": ["iceberg lettuce", "romaine lettuce", "leaf lettuce", "shredded lettuce"],
+    "category": "produce"
+  },
+  "mushroom": {
+    "variations": ["mushrooms", "button mushroom", "portobello mushroom", "sliced mushroom"],
+    "category": "produce"
+  },
+  "apple": {
+    "variations": ["apples", "green apple", "red apple", "chopped apple", "sliced apple"],
+    "category": "produce"
+  },
+  "banana": {
+    "variations": ["bananas", "ripe banana", "sliced banana"],
+    "category": "produce"
+  },
+  "strawberry": {
+    "variations": ["strawberries", "fresh strawberry", "frozen strawberry"],
+    "category": "produce"
+  },
+  "rice": {
+    "variations": ["basmati rice", "white rice", "brown rice", "jasmine rice", "cooked rice"],
+    "category": "grains"
+  },
+  "pasta": {
+    "variations": ["spaghetti", "penne", "macaroni", "fettuccine", "lasagna noodles"],
+    "category": "grains"
+  },
+  "bread": {
+    "variations": ["white bread", "brown bread", "whole wheat bread", "toast", "bun", "roll"],
+    "category": "grains"
+  },
+  "flour": {
+    "variations": ["plain flour", "all-purpose flour", "wheat flour", "maida", "self-raising flour"],
+    "category": "grains"
+  },
+  "oats": {
+    "variations": ["rolled oats", "instant oats", "steel-cut oats"],
+    "category": "grains"
+  },
+  "butter": {
+    "variations": ["unsalted butter", "salted butter", "melted butter", "softened butter"],
+    "category": "dairy"
+  },
+  "milk": {
+    "variations": ["whole milk", "skimmed milk", "low-fat milk", "almond milk", "oat milk"],
+    "category": "dairy"
+  },
+  "cheese": {
+    "variations": ["cheddar cheese", "mozzarella cheese", "parmesan cheese", "cream cheese", "grated cheese"],
+    "category": "dairy"
+  },
+  "yogurt": {
+    "variations": ["curd", "greek yogurt", "plain yogurt", "low-fat yogurt"],
+    "category": "dairy"
+  },
+  "egg": {
+    "variations": ["eggs", "boiled egg", "scrambled egg", "beaten egg"],
+    "category": "dairy"
+  },
+  "chicken": {
+    "variations": ["chicken breast", "chicken thigh", "chicken drumstick", "grilled chicken", "roasted chicken"],
+    "category": "meat"
+  },
+  "beef": {
+    "variations": ["ground beef", "minced beef", "steak", "roast beef"],
+    "category": "meat"
+  },
+  "lamb": {
+    "variations": ["ground lamb", "lamb chops", "minced lamb"],
+    "category": "meat"
+  },
+  "fish": {
+    "variations": ["salmon", "cod", "tilapia", "white fish", "tuna"],
+    "category": "seafood"
+  },
+  "prawn": {
+    "variations": ["shrimp", "king prawn", "small prawn"],
+    "category": "seafood"
+  },
+  "salt": {
+    "variations": ["table salt", "sea salt", "rock salt"],
+    "category": "spices & herbs"
+  },
+  "pepper": {
+    "variations": ["black pepper", "ground pepper", "white pepper"],
+    "category": "spices & herbs"
+  },
+  "cumin": {
+    "variations": ["cumin powder", "cumin seeds", "ground cumin"],
+    "category": "spices & herbs"
+  },
+  "turmeric": {
+    "variations": ["turmeric powder", "haldi"],
+    "category": "spices & herbs"
+  },
+  "chili": {
+    "variations": ["red chili", "green chili", "chili flakes", "chili powder"],
+    "category": "spices & herbs"
+  },
+  "coriander": {
+    "variations": ["cilantro", "fresh coriander", "coriander powder", "ground coriander"],
+    "category": "spices & herbs"
+  },
+  "ginger": {
+    "variations": ["fresh ginger", "ginger paste", "ground ginger"],
+    "category": "spices & herbs"
+  },
+  "oil": {
+    "variations": ["olive oil", "vegetable oil", "sunflower oil", "canola oil", "cooking oil"],
+    "category": "pantry"
+  },
+  "vinegar": {
+    "variations": ["white vinegar", "apple cider vinegar", "balsamic vinegar"],
+    "category": "pantry"
+  },
+  "soy sauce": {
+    "variations": ["light soy sauce", "dark soy sauce"],
+    "category": "pantry"
+  },
+  "sugar": {
+    "variations": ["white sugar", "brown sugar", "granulated sugar", "powdered sugar"],
+    "category": "pantry"
+  },
+  "honey": {
+    "variations": ["raw honey", "organic honey"],
+    "category": "pantry"
+  },
+  "tomato sauce": {
+    "variations": ["ketchup", "tomato puree", "passata", "tomato paste"],
+    "category": "pantry"
+  },
+  "mayonnaise": {
+    "variations": ["mayo", "light mayonnaise"],
+    "category": "pantry"
+  },
+  "mustard": {
+    "variations": ["yellow mustard", "dijon mustard", "wholegrain mustard"],
+    "category": "pantry"
+  },
+  "rice flour": {
+    "variations": ["rice powder"],
+    "category": "grains"
+  },
+  "lentil": {
+    "variations": ["masoor dal", "moong dal", "toor dal", "red lentils", "yellow lentils"],
+    "category": "grains"
+  },
+  "bean": {
+    "variations": ["kidney beans", "black beans", "chickpeas", "garbanzo beans", "canned beans"],
+    "category": "grains"
+  },
+  "corn": {
+    "variations": ["sweet corn", "corn kernels", "canned corn", "frozen corn"],
+    "category": "produce"
+  },
+  "peas": {
+    "variations": ["green peas", "frozen peas", "fresh peas"],
+    "category": "frozen"
+  },
+  "basil": {
+    "variations": ["fresh basil", "dried basil"],
+    "category": "spices & herbs"
+  },
+  "parsley": {
+    "variations": ["fresh parsley", "dried parsley"],
+    "category": "spices & herbs"
+  },
+  "mint": {
+    "variations": ["fresh mint", "mint leaves"],
+    "category": "spices & herbs"
+  },
+  "eggplant": {
+    "variations": ["aubergine", "brinjal", "chopped eggplant"],
+    "category": "produce"
+  },
+  "zucchini": {
+    "variations": ["courgette", "chopped zucchini", "sliced zucchini"],
+    "category": "produce"
+  },
+  "cauliflower": {
+    "variations": ["cauliflower florets", "chopped cauliflower"],
+    "category": "produce"
+  },
+  "pumpkin": {
+    "variations": ["butternut squash", "chopped pumpkin", "pureed pumpkin"],
+    "category": "produce"
+  },
+  "tofu": {
+    "variations": ["firm tofu", "silken tofu", "soft tofu"],
+    "category": "frozen"
+  },
+  "paneer": {
+    "variations": ["indian cottage cheese", "grilled paneer", "cubed paneer"],
+    "category": "dairy"
+  },
+  "cream": {
+    "variations": ["heavy cream", "double cream", "whipping cream", "single cream"],
+    "category": "dairy"
+  },
+  "buttermilk": {
+    "variations": ["chaas"],
+    "category": "dairy"
+  },
+  "nuts": {
+    "variations": ["almonds", "walnuts", "cashews", "peanuts", "pistachios"],
+    "category": "pantry"
+  },
+  "raisins": {
+    "variations": ["sultanas", "dried grapes"],
+    "category": "pantry"
+  },
+  "chocolate": {
+    "variations": ["dark chocolate", "milk chocolate", "chocolate chips"],
+    "category": "pantry"
+  },
+  "baking powder": {
+    "variations": ["baking soda"],
+    "category": "pantry"
+  },
+  "yeast": {
+    "variations": ["dry yeast", "instant yeast"],
+    "category": "pantry"
+  }
+}
