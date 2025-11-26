@@ -1,9 +1,10 @@
-import * as listService from "../../services/shopping-list.service.js";
+import * as shoppingListService from "../../services/shopping-list.service.js";
 
-export async function generate(req, res, next) {
+export async function generateShoppingList(req, res, next) {
   try {
-    const list = await listService.generateList(req.params.id);
-    res.json(list);
+    const { planId } = req.params;
+    const result = await shoppingListService.generateShoppingList(planId);
+    res.json(result);
   } catch (err) {
     next(err);
   }

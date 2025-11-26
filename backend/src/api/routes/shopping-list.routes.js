@@ -1,8 +1,9 @@
 import { Router } from "express";
-import * as list from "../controllers/shopping-list.controller.js";
+import * as shoppingListController from "../controllers/shopping-list.controller.js";
 
 const router = Router();
 
-router.post("/:id", list.generate);
+// POST /shopping-list/:planId
+router.post("/:planId", shoppingListController.generateShoppingList);
 
 export default router;
