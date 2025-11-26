@@ -14,20 +14,30 @@ export async function getRecipe(id) {
   return { id: snap.id, ...snap.data() };
 }
 
-export async function getRecipesByIds(ids) {
-  const db = getDb();
-  const results = {};
-
-  for (const id of ids) {
-    const snap = await db.collection(COLLECTION).doc(id).get();
-    if (snap.exists) results[id] = { id, ...snap.data() };
-  }
-
-  return results;
-}
-
 export async function listRecipes() {
   const db = getDb();
   const snap = await db.collection(COLLECTION).get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Load multiple recipes by their Firestore document IDs.
+ * Simple loop – fine for small plans.
+ */
+export async function getRecipesByIds(ids) {
+  if (!ids || ids.length === 0) return [];
+
+  const db = getDb();
+  const collectionRef = db.collection(COLLECTION);
+
+  const recipes = [];
+
+  for (const id of ids) {
+    const snap = await collectionRef.doc(id).get();
+    if (snap.exists) {
+      recipes.push({ id: snap.id, ...snap.data() });
+    }
+  }
+
+  return recipes;
 }
