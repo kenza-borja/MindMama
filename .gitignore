@@ -20,3 +20,22 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+ai/.venv/
+ai/__pycache__/
+backend/.env
+ai/*.json
+
+
+# Python cache + virtualenv
+ai/.venv/
+ai/**/__pycache__/
+ai/*.json
+
+# Node lock files you don't want
+frontend/package-lock.json
+frontend/package.json
+
+# Env
+.env
+backend/.env
