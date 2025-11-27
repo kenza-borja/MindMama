@@ -1,104 +1,133 @@
-import React from 'react';
+// screens/CategoryRecipesScreen.tsx
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { RootTabParamList } from '../types/navigation';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-
-// --- Define Screen Prop Type ---
-type CategoryRecipesScreenProps = BottomTabScreenProps<RootTabParamList, 'CategoryRecipes'>;
-
-// --- Reusable Component Mocks (Use your RN Reusables components here) ---
-
-const RNCard: React.FC<{ style?: object | object[]; children: React.ReactNode }> = ({ style, children }) => (
-  <View style={[{ borderRadius: 12, backgroundColor: '#fff', overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3 }, style]}>
-    {children}
-  </View>
-);
-
-interface FullRecipeListItemProps {
-  title: string;
-  onAddPress: () => void;
+interface CategoryRecipesScreenProps {
+  navigation: any;
+  route: any;
 }
 
-const FullRecipeListItem: React.FC<FullRecipeListItemProps> = ({ title, onAddPress }) => (
-  <RNCard style={styles.fullRecipeListItemCard}>
-    <View style={styles.fullRecipeListItemImagePlaceholder} />
-    <View style={styles.fullRecipeListItemDetails}>
-      <Text style={styles.fullRecipeListItemTitle}>{title}</Text>
-    </View>
-    <TouchableOpacity style={styles.fullRecipeListItemAddButton} onPress={onAddPress}>
-      <Ionicons name="add" size={20} color="#000" />
-    </TouchableOpacity>
-  </RNCard>
-);
+interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  added: boolean;
+}
 
-// --- Component Data ---
-const specificCategoryRecipes = [
-  { id: 'a', title: 'Lorem ipsum dolor sit amet' },
-  { id: 'b', title: 'Lorem ipsum dolor sit amet' },
-  { id: 'c', title: 'Lorem ipsum dolor sit amet' },
-  { id: 'd', title: 'Lorem ipsum dolor sit amet' },
-  { id: 'e', title: 'Lorem ipsum dolor sit amet' },
+// Mock data - replace with actual data from backend
+const mockRecipes: Recipe[] = [
+  { id: '1', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
+  { id: '2', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
+  { id: '3', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
+  { id: '4', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
+  { id: '5', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
+  { id: '6', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
 ];
 
-// --- Main Screen Component ---
 const CategoryRecipesScreen: React.FC<CategoryRecipesScreenProps> = ({ navigation, route }) => {
-  const { category } = route.params; // Get the category from navigation params
+  const category = route?.params?.category || 'Lunch';
+  const [recipes, setRecipes] = useState<Recipe[]>(mockRecipes);
 
-  const Header = () => (
-    <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
-      <View style={styles.titleContainer}>
-        <Text style={styles.titleText}>Sara's kitchen</Text>
-        <MaterialCommunityIcons name="silverware-fork-knife" size={24} color="#000" style={styles.iconStyle} />
-      </View>
-      <View style={styles.rightHeaderBox} />
-    </View>
-  );
+  const handleToggleRecipe = (recipeId: string) => {
+    setRecipes(prev =>
+      prev.map(recipe =>
+        recipe.id === recipeId ? { ...recipe, added: !recipe.added } : recipe
+      )
+    );
+  };
+
+  const handleValidation = () => {
+    const selectedRecipes = recipes.filter(r => r.added);
+    console.log('Selected recipes:', selectedRecipes);
+    // Navigate back or to next step
+    navigation.goBack();
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
-        <Header />
-
-        {/* Progress Dots/Placeholder Lines */}
-        <View style={styles.progressContainer}>
-            {Array(5).fill(0).map((_, i) => (
-                <View key={i} style={[styles.progressDot, i === 2 && styles.progressDotActive]} /> //* Third dot active for this example */}
-            ))}
+      {/* Header */}
+      <View style={styles.header}>
+      <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.navigate('SelectRecipes')}
+        >
+          <Ionicons name="chevron-back" size={28} color="#111827" />
+        </TouchableOpacity>
+        
+        <View style={styles.titleContainer}>
+          <Text style={styles.titleText}>Sara's kitchen</Text>
+          <Ionicons name="restaurant-outline" size={24} color="#111827" />
         </View>
+        
+        <View style={styles.headerRight} />
+      </View>
 
+      {/* Progress Indicator */}
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, styles.progressActive]} />
+        <View style={[styles.progressBar, styles.progressActive]} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+      </View>
+
+      {/* Category Title */}
+      <View style={styles.categoryTitleContainer}>
         <Text style={styles.categoryTitle}>{category}</Text>
+      </View>
 
-        {specificCategoryRecipes.map(recipe => (
-          <FullRecipeListItem
-            key={recipe.id}
-            title={recipe.title}
-            onAddPress={() => console.log(`Added ${recipe.title} from ${category}`)}
-          />
+      <ScrollView 
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Recipe List */}
+        {recipes.map((recipe, index) => (
+          <View 
+            key={recipe.id} 
+            style={[
+              styles.recipeItem,
+              index === recipes.length - 1 && styles.lastRecipeItem
+            ]}
+          >
+            <View style={styles.recipeImagePlaceholder} />
+            <View style={styles.recipeInfo}>
+              <Text style={styles.recipeTitle}>{recipe.title}</Text>
+              <Text style={styles.recipeDescription}>{recipe.description}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={() => handleToggleRecipe(recipe.id)}
+            >
+              <Ionicons 
+                name={recipe.added ? "checkmark" : "add"} 
+                size={20} 
+                color={recipe.added ? "#10B981" : "#9CA3AF"} 
+              />
+            </TouchableOpacity>
+          </View>
         ))}
 
-        {/* Validation Button (Bottom overlay) */}
-        <View style={{height: 80}} /> {/* Spacer to prevent content from being hidden by overlay */}
+        {/* Bottom spacing for button */}
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Fixed Validation Button at the bottom */}
+      {/* Validation Button */}
       <View style={styles.validationButtonContainer}>
-          <TouchableOpacity style={styles.validationButton}>
-            <Text style={styles.validationButtonText}>Validation</Text>
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.validationButton} onPress={handleValidation}>
+          <Text style={styles.validationButtonText}>Validation</Text>
+        </TouchableOpacity>
       </View>
+
+      
     </SafeAreaView>
   );
 };
@@ -108,129 +137,136 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  container: {
-    paddingHorizontal: 15,
-    paddingBottom: 20,
-  },
-  // Header Styles (Adapted from previous screens)
+
+  /** HEADER **/
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   backButton: {
-    marginRight: 10,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    gap: 6,
   },
   titleText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginRight: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
   },
-  iconStyle: {},
-  rightHeaderBox: {
-    width: 30,
-    height: 30,
-    backgroundColor: '#ddd',
-    borderRadius: 5,
-    marginLeft: 10,
+  headerRight: {
+    width: 40,
   },
 
-  // Progress Dots
+  /** PROGRESS BARS **/
   progressContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    marginTop: 10,
-    marginBottom: 25,
+    gap: 8,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 24,
   },
-  progressDot: {
-    width: '18%',
+  progressBar: {
+    flex: 1,
     height: 3,
-    backgroundColor: '#ddd',
-    borderRadius: 5,
-    marginRight: '2%',
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
   },
-  progressDotActive: {
-    backgroundColor: '#000',
+  progressActive: {
+    backgroundColor: '#6B7280',
   },
 
-  categoryTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  /** CATEGORY TITLE **/
+  categoryTitleContainer: {
+    paddingHorizontal: 16,
     marginBottom: 20,
   },
+  categoryTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111827',
+  },
 
-  // Full Recipe List Item (Image 1 cards)
-  fullRecipeListItemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    marginBottom: 10,
-  },
-  fullRecipeListItemImagePlaceholder: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 8,
-    marginRight: 15,
-  },
-  fullRecipeListItemDetails: {
+  /** BODY **/
+  container: {
     flex: 1,
   },
-  fullRecipeListItemTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  fullRecipeListItemAddButton: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
+  scrollContent: {
+    paddingHorizontal: 16,
   },
 
-  // Validation Button (Fixed at bottom)
+  /** RECIPE ITEMS **/
+  recipeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  lastRecipeItem: {
+    borderBottomWidth: 0,
+  },
+  recipeImagePlaceholder: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
+    marginRight: 16,
+  },
+  recipeInfo: {
+    flex: 1,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  recipeDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+
+  /** VALIDATION BUTTON **/
   validationButtonContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: 'rgba(255,255,255,0.95)', // Semi-transparent white overlay
-      paddingHorizontal: 20,
-      paddingVertical: 15,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -5 },
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
-      elevation: 10,
-      paddingBottom: 30, // For safe area padding
+    position: 'absolute',
+    bottom: 100,
+    left: 16,
+    right: 16,
   },
   validationButton: {
-    backgroundColor: '#000',
-    paddingVertical: 15,
+    backgroundColor: '#9CA3AF',
+    paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   validationButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
   },
+
+  
 });
 
 export default CategoryRecipesScreen;

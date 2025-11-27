@@ -1,126 +1,343 @@
-import React from 'react';
+// screens/SelectRecipesScreen.tsx
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
   TouchableOpacity,
+  Image,
   Dimensions,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { RootTabParamList } from '../types/navigation';
 
-const { width } = Dimensions.get('window');
-
-// --- Define Screen Prop Type ---
 type SelectRecipesScreenProps = BottomTabScreenProps<RootTabParamList, 'SelectRecipes'>;
 
-// --- Reusable Component Mocks (Use your RN Reusables components here) ---
-
-const RNCard: React.FC<{ style?: object | object[]; children: React.ReactNode }> = ({ style, children }) => (
-  <View style={[{ borderRadius: 12, backgroundColor: '#fff', overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3 }, style]}>
-    {children}
-  </View>
-);
-
-interface RecipeListItemProps {
+interface Recipe {
+  id: string;
   title: string;
   time: string;
-  onAddPress: () => void;
+  imageUrl?: string;
+  added: boolean;
 }
 
-const RecipeListItem: React.FC<RecipeListItemProps> = ({ title, time, onAddPress }) => (
-  <RNCard style={styles.recipeListItemCard}>
-    <View style={styles.recipeListItemImagePlaceholder} />
-    <View style={styles.recipeListItemDetails}>
-      <Text style={styles.recipeListItemTitle}>{title}</Text>
-      <View style={styles.recipeListItemTimeRow}>
-        <MaterialCommunityIcons name="clock-outline" size={14} color="#555" />
-        <Text style={styles.recipeListItemTimeText}>{time}</Text>
-      </View>
-    </View>
-    <TouchableOpacity style={styles.recipeListItemAddButton} onPress={onAddPress}>
-      <Ionicons name="add" size={20} color="#000" />
-    </TouchableOpacity>
-  </RNCard>
-);
+// Mock data
+const recipesData = {
+  Breakfast: [
+    { id: '1', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '2', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '3', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+  ],
+  Lunch: [
+    { id: '4', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '5', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '6', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+  ],
+  Dinner: [
+    { id: '7', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '8', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+  ],
+  Desserts: [
+    { id: '7', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '8', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+  ],
+  Snacks: [
+    { id: '7', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+    { id: '8', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes', added: false },
+  ],
+};
 
-// --- Component Data ---
-const recipesData = [
-  { id: '1', category: 'Breakfast', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes' },
-  { id: '2', category: 'Breakfast', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes' },
-  { id: '3', category: 'Breakfast', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes' },
-  { id: '4', category: 'Lunch', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes' },
-  { id: '5', category: 'Lunch', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes' },
-  { id: '6', category: 'Lunch', title: 'Lorem ipsum dolor sit amet', time: '30-45 minutes' },
-];
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 48) / 2; // 2 cards per row with padding
 
-// --- Main Screen Component ---
-const SelectRecipesScreen: React.FC<SelectRecipesScreenProps> = ({ navigation }) => {
+const SelectRecipesScreen: React.FC<SelectRecipesScreenProps> = ({ navigation, route }) => {
+  const { numberOfDays = 2, selectedDays = [], selectedRecipeOption = 'New recipe' } = route.params || {};
+  const [recipes, setRecipes] = useState(recipesData);
 
-  const Header = () => (
-    <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
-      <View style={styles.titleContainer}>
-        <Text style={styles.titleText}>Sara's kitchen</Text>
-        <MaterialCommunityIcons name="silverware-fork-knife" size={24} color="#000" style={styles.iconStyle} />
-      </View>
-      <View style={styles.rightHeaderBox} />
-    </View>
-  );
+  const handleAddRecipe = (category: string, recipeId: string) => {
+    setRecipes(prev => ({
+      ...prev,
+      [category]: prev[category as keyof typeof prev].map(recipe =>
+        recipe.id === recipeId ? { ...recipe, added: !recipe.added } : recipe
+      ),
+    }));
+  };
 
-  const renderRecipeSection = (category: string) => (
-    <View key={category} style={styles.categorySection}>
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>{category}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('CategoryRecipes', { category })}>
-          <Text style={styles.seeAllText}>See All</Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScrollContainer}>
-        {recipesData
-          .filter(recipe => recipe.category === category)
-          .map(recipe => (
-            <RecipeListItem
-              key={recipe.id}
-              title={recipe.title}
-              time={recipe.time}
-              onAddPress={() => console.log(`Add ${recipe.title}`)}
-            />
-          ))}
-      </ScrollView>
-    </View>
-  );
+  const handleSeeAll = (category: string) => {
+    navigation.navigate('CategoryRecipes', { category });
+  };
+
+  const handleNext = () => {
+    // Get all selected recipes
+    const allSelectedRecipes = Object.entries(recipes).flatMap(([category, recipeList]) =>
+      recipeList.filter(r => r.added).map(r => ({ ...r, category }))
+    );
+    
+    console.log('Selected recipes:', allSelectedRecipes);
+    
+    // Navigate to CategoryRecipes screen (you can choose which category to show)
+    // Option 1: Navigate to a specific category (e.g., Lunch)
+    navigation.navigate('CategoryRecipes', { category: 'Lunch' });
+    
+    // Option 2: Navigate to next step instead
+    // navigation.navigate('NextStep', { selectedRecipes: allSelectedRecipes });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
-        <Header />
+      {/* Header */}
+      <View style={styles.header}>
+      <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.navigate('CreateMeal')}
+        >
+          <Ionicons name="chevron-back" size={28} color="#111827" />
+        </TouchableOpacity>
+        
+        <View style={styles.titleContainer}>
+          <Text style={styles.titleText}>Sara's kitchen</Text>
+          <Ionicons name="restaurant-outline" size={24} color="#111827" />
+        </View>
+        
+        <View style={styles.headerRight} />
+      </View>
 
-        {/* Progress Dots/Placeholder Lines */}
-        <View style={styles.progressContainer}>
-            {Array(5).fill(0).map((_, i) => (
-                <View key={i} style={[styles.progressDot, i === 1 && styles.progressDotActive]} /> //* Second dot active */}
+      {/* Progress Indicator */}
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, styles.progressActive]} />
+        <View style={[styles.progressBar, styles.progressActive]} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+      </View>
+
+      <ScrollView 
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Subtitle */}
+        <Text style={styles.subtitle}>Select your receipes you want to add :</Text>
+
+        {/* Breakfast Section */}
+        <View style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>Breakfast</Text>
+            <TouchableOpacity onPress={() => handleSeeAll('Breakfast')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recipesRow}
+          >
+            {recipes.Breakfast.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCard}>
+                <View style={styles.recipeImageContainer}>
+                  <View style={styles.recipeImagePlaceholder} />
+                  <TouchableOpacity 
+                    style={styles.addButton}
+                    onPress={() => handleAddRecipe('Breakfast', recipe.id)}
+                  >
+                    <Ionicons 
+                      name={recipe.added ? "checkmark" : "add"} 
+                      size={20} 
+                      color={recipe.added ? "#10B981" : "#9CA3AF"} 
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.recipeTitle} numberOfLines={2}>
+                  {recipe.title}
+                </Text>
+                <View style={styles.recipeTimeContainer}>
+                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                  <Text style={styles.recipeTime}>{recipe.time}</Text>
+                </View>
+              </View>
             ))}
+          </ScrollView>
         </View>
 
-        <Text style={styles.mainHeading}>Select your receipes you want to add :</Text>
+        {/* Lunch Section */}
+        <View style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>Lunch</Text>
+            <TouchableOpacity onPress={() => handleSeeAll('Lunch')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recipesRow}
+          >
+            {recipes.Lunch.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCard}>
+                <View style={styles.recipeImageContainer}>
+                  <View style={styles.recipeImagePlaceholder} />
+                  <TouchableOpacity 
+                    style={styles.addButton}
+                    onPress={() => handleAddRecipe('Lunch', recipe.id)}
+                  >
+                    <Ionicons 
+                      name={recipe.added ? "checkmark" : "add"} 
+                      size={20} 
+                      color={recipe.added ? "#10B981" : "#9CA3AF"} 
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.recipeTitle} numberOfLines={2}>
+                  {recipe.title}
+                </Text>
+                <View style={styles.recipeTimeContainer}>
+                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                  <Text style={styles.recipeTime}>{recipe.time}</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
 
-        {renderRecipeSection('Breakfast')}
-        {renderRecipeSection('Lunch')}
-        {/* Add more categories here if needed */}
+        {/* Dinner Section */}
+        <View style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>Dinner</Text>
+            <TouchableOpacity onPress={() => handleSeeAll('Dinner')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recipesRow}
+          >
+            {recipes.Dinner.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCard}>
+                <View style={styles.recipeImageContainer}>
+                  <View style={styles.recipeImagePlaceholder} />
+                  <TouchableOpacity 
+                    style={styles.addButton}
+                    onPress={() => handleAddRecipe('Dinner', recipe.id)}
+                  >
+                    <Ionicons 
+                      name={recipe.added ? "checkmark" : "add"} 
+                      size={20} 
+                      color={recipe.added ? "#10B981" : "#9CA3AF"} 
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.recipeTitle} numberOfLines={2}>
+                  {recipe.title}
+                </Text>
+                <View style={styles.recipeTimeContainer}>
+                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                  <Text style={styles.recipeTime}>{recipe.time}</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
 
-        {/* Next Button */}
-        <TouchableOpacity style={styles.nextButton}>
+            {/* Desserts Section */}
+        <View style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>Desserts</Text>
+            <TouchableOpacity onPress={() => handleSeeAll('Desserts')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recipesRow}
+          >
+            {recipes.Dinner.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCard}>
+                <View style={styles.recipeImageContainer}>
+                  <View style={styles.recipeImagePlaceholder} />
+                  <TouchableOpacity 
+                    style={styles.addButton}
+                    onPress={() => handleAddRecipe('Desserts', recipe.id)}
+                  >
+                    <Ionicons 
+                      name={recipe.added ? "checkmark" : "add"} 
+                      size={20} 
+                      color={recipe.added ? "#10B981" : "#9CA3AF"} 
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.recipeTitle} numberOfLines={2}>
+                  {recipe.title}
+                </Text>
+                <View style={styles.recipeTimeContainer}>
+                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                  <Text style={styles.recipeTime}>{recipe.time}</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Snacks Section */}
+        <View style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>Snacks</Text>
+            <TouchableOpacity onPress={() => handleSeeAll('Snacks')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recipesRow}
+          >
+            {recipes.Dinner.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCard}>
+                <View style={styles.recipeImageContainer}>
+                  <View style={styles.recipeImagePlaceholder} />
+                  <TouchableOpacity 
+                    style={styles.addButton}
+                    onPress={() => handleAddRecipe('Snacks', recipe.id)}
+                  >
+                    <Ionicons 
+                      name={recipe.added ? "checkmark" : "add"} 
+                      size={20} 
+                      color={recipe.added ? "#10B981" : "#9CA3AF"} 
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.recipeTitle} numberOfLines={2}>
+                  {recipe.title}
+                </Text>
+                <View style={styles.recipeTimeContainer}>
+                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                  <Text style={styles.recipeTime}>{recipe.time}</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Bottom spacing */}
+        <View style={{ height: 120 }} />
+      </ScrollView>
+
+      {/* Next Button */}
+      <View style={styles.nextButtonContainer}>
+        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
+      </View>
 
-        <View style={{ height: 100 }} /> {/* Space for FAB */}
-      </ScrollView>
+      
     </SafeAreaView>
   );
 };
@@ -130,147 +347,159 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  container: {
-    paddingHorizontal: 15,
-    paddingBottom: 40,
-  },
-  // Header Styles (Adapted from previous screens)
+
+  /** HEADER **/
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   backButton: {
-    marginRight: 10,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1, // Allow title to take up space
+    gap: 6,
   },
   titleText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginRight: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
   },
-  iconStyle: {},
-  rightHeaderBox: {
-    width: 30,
-    height: 30,
-    backgroundColor: '#ddd',
-    borderRadius: 5,
-    marginLeft: 10,
+  headerRight: {
+    width: 40,
   },
 
-  // Progress Dots
+  /** PROGRESS BARS **/
   progressContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    marginTop: 10,
-    marginBottom: 25,
+    gap: 8,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 24,
   },
-  progressDot: {
-    width: '18%',
+  progressBar: {
+    flex: 1,
     height: 3,
-    backgroundColor: '#ddd',
-    borderRadius: 5,
-    marginRight: '2%',
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
   },
-  progressDotActive: {
-    backgroundColor: '#000',
-  },
-
-  mainHeading: {
-    fontSize: 22, // Slightly smaller than previous main heading
-    fontWeight: 'bold',
-    marginBottom: 30,
+  progressActive: {
+    backgroundColor: '#6B7280',
   },
 
-  categorySection: {
+  /** BODY **/
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#111827',
     marginBottom: 20,
   },
-  sectionHeaderRow: {
+
+  /** CATEGORY SECTIONS **/
+  categorySection: {
+    marginBottom: 28,
+  },
+  categoryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
   },
   seeAllText: {
     fontSize: 14,
-    color: '#888',
-  },
-  horizontalScrollContainer: {
-    paddingRight: 15, // Ensure last item isn't cut off
+    color: '#6B7280',
+    fontWeight: '500',
   },
 
-  // Recipe List Item within horizontal scroll (Image 2 cards)
-  recipeListItemCard: {
-    width: width * 0.4, // Approx width to show 2.5 cards
-    marginRight: 15,
-    padding: 10,
+  /** RECIPES ROW **/
+  recipesRow: {
+    paddingRight: 16,
   },
-  recipeListItemImagePlaceholder: {
-    width: '100%',
-    height: 80,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 8,
+  recipeCard: {
+    width: CARD_WIDTH,
+    marginRight: 12,
+  },
+  recipeImageContainer: {
+    position: 'relative',
     marginBottom: 10,
   },
-  recipeListItemDetails: {
-    flex: 1,
+  recipeImagePlaceholder: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
   },
-  recipeListItemTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  recipeListItemTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  recipeListItemTimeText: {
-    fontSize: 12,
-    color: '#555',
-    marginLeft: 4,
-  },
-  recipeListItemAddButton: {
+  addButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#fff',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
-    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  recipeTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  recipeTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recipeTime: {
+    fontSize: 12,
+    color: '#9CA3AF',
   },
 
-  // Next Button
+  /** NEXT BUTTON **/
+  nextButtonContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 16,
+    right: 16,
+  },
   nextButton: {
-    backgroundColor: '#000',
-    paddingVertical: 15,
+    backgroundColor: '#9CA3AF',
+    paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 30,
-    marginHorizontal: 15, // For consistency, though should be full width if no padding
   },
   nextButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
   },
+
+  
 });
 
 export default SelectRecipesScreen;

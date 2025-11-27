@@ -1,15 +1,14 @@
+// screens/CreateMealScreen.tsx
 import React, { useState } from "react";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { RootTabParamList } from "../types/navigation";
-import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 interface CreateMealScreenProps {
   navigation: any;
@@ -24,7 +23,7 @@ const daysOfWeek = [
   "Saturday",
   "Sunday",
 ];
-const recipeOptions = ["New recipe", "Saved", "Suggestion from AI"];
+const recipeOptions = ["New recipe", "Save", "Suggestion from AI"];
 
 const CreateMealScreen: React.FC<CreateMealScreenProps> = ({ navigation }) => {
   const [numberOfDays, setNumberOfDays] = useState(2);
@@ -52,135 +51,135 @@ const CreateMealScreen: React.FC<CreateMealScreenProps> = ({ navigation }) => {
     }
   };
 
-  
+  const handleNext = () => {
+  navigation.navigate('SelectRecipes', {
+    numberOfDays,
+    selectedDays,
+    selectedRecipeOption,
+  });
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
-      <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={28} color="#111827" />
-          </TouchableOpacity>
-
-          <View style={styles.titleContainer}>
-            <Text style={styles.titleText}>Sara's kitchen</Text>
-            <Ionicons name="restaurant-outline" size={24} color="#111827" />
-          </View>
-
-          {/* Empty view for layout balance */}
-          <View style={styles.headerRight} />
-        </View>
-
-        {/* Progress Indicator */}
-        <View style={styles.progressContainer}>
-          <View style={[styles.progressBar, styles.progressActive]} />
-          <View style={styles.progressBar} />
-          <View style={styles.progressBar} />
-          <View style={styles.progressBar} />
-        </View>
-
-        <ScrollView
-          style={styles.container}
-          showsVerticalScrollIndicator={false}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          {/* Main Title */}
-          <Text style={styles.mainTitle}>Let's create your meals !</Text>
+          <Ionicons name="chevron-back" size={28} color="#111827" />
+        </TouchableOpacity>
 
-          {/* How many days? */}
-          <View style={styles.card}>
-            <Text style={styles.questionText}>How many days ?</Text>
-            <View style={styles.counterContainer}>
-              <TouchableOpacity
-                style={styles.counterButton}
-                onPress={handleDecrement}
-              >
-                <Ionicons name="remove" size={24} color="#6B7280" />
-              </TouchableOpacity>
+        <View style={styles.titleContainer}>
+          <Text style={styles.titleText}>Sara's kitchen</Text>
+          <Ionicons name="restaurant-outline" size={24} color="#111827" />
+        </View>
 
-              <Text style={styles.counterValue}>{numberOfDays}</Text>
+        {/* Empty view for layout balance */}
+        <View style={styles.headerRight} />
+      </View>
 
-              <TouchableOpacity
-                style={styles.counterButton}
-                onPress={handleIncrement}
-              >
-                <Ionicons name="add" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-          </View>
+      {/* Progress Indicator */}
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, styles.progressActive]} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+        <View style={styles.progressBar} />
+      </View>
 
-          {/* Which days? */}
-          <View style={styles.card}>
-            <Text style={styles.questionText}>Which days ?</Text>
-            <View style={styles.daysContainer}>
-              {daysOfWeek.map((day) => (
-                <TouchableOpacity
-                  key={day}
-                  style={[
-                    styles.dayButton,
-                    selectedDays.includes(day) && styles.dayButtonSelected,
-                  ]}
-                  onPress={() => handleDayToggle(day)}
-                >
-                  <Text
-                    style={[
-                      styles.dayText,
-                      selectedDays.includes(day) && styles.dayTextSelected,
-                    ]}
-                  >
-                    {day}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Main Title */}
+        <Text style={styles.mainTitle}>Let's create your meals !</Text>
 
-          {/* Where do you want take your recipe? */}
-          <View style={styles.card}>
-            <Text style={styles.questionText}>
-              Where do you want take your recipe ?
-            </Text>
-            <View style={styles.optionsContainer}>
-              {recipeOptions.map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={[
-                    styles.optionButton,
-                    selectedRecipeOption === option &&
-                      styles.optionButtonSelected,
-                  ]}
-                  onPress={() => setSelectedRecipeOption(option)}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      selectedRecipeOption === option &&
-                        styles.optionTextSelected,
-                    ]}
-                  >
-                    {option}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-          {/* NEXT BUTTON */}
-          <View style={styles.nextButtonWrapper}>
-            <TouchableOpacity style={styles.nextButton}
-            onPress={() => navigation.navigate('SelectRecipes')}>
-              <Text style={styles.nextButtonText}>Next</Text>
+        {/* How many days? */}
+        <View style={styles.card}>
+          <Text style={styles.questionText}>How many days ?</Text>
+          <View style={styles.counterContainer}>
+            <TouchableOpacity
+              style={styles.counterButton}
+              onPress={handleDecrement}
+            >
+              <Ionicons name="remove" size={24} color="#6B7280" />
+            </TouchableOpacity>
+
+            <Text style={styles.counterValue}>{numberOfDays}</Text>
+
+            <TouchableOpacity
+              style={styles.counterButton}
+              onPress={handleIncrement}
+            >
+              <Ionicons name="add" size={24} color="#6B7280" />
             </TouchableOpacity>
           </View>
-          {/* Bottom spacing */}
-          <View style={{ height: 100 }} />
-        </ScrollView>
+        </View>
 
-        
-      </SafeAreaView>
+        {/* Which days? */}
+        <View style={styles.card}>
+          <Text style={styles.questionText}>Which days ?</Text>
+          <View style={styles.daysContainer}>
+            {daysOfWeek.map((day) => (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayButton,
+                  selectedDays.includes(day) && styles.dayButtonSelected,
+                ]}
+                onPress={() => handleDayToggle(day)}
+              >
+                <Text
+                  style={[
+                    styles.dayText,
+                    selectedDays.includes(day) && styles.dayTextSelected,
+                  ]}
+                >
+                  {day}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Where do you want take your recipe? */}
+        <View style={styles.card}>
+          <Text style={styles.questionText}>
+            Where do you want take your receipe ?
+          </Text>
+          <View style={styles.optionsContainer}>
+            {recipeOptions.map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.optionButton,
+                  selectedRecipeOption === option &&
+                    styles.optionButtonSelected,
+                ]}
+                onPress={() => setSelectedRecipeOption(option)}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedRecipeOption === option &&
+                      styles.optionTextSelected,
+                  ]}
+                >
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* NEXT BUTTON */}
+        <View style={styles.nextButtonWrapper}>
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <Text style={styles.nextButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Bottom spacing */}
+        <View style={{ height: 120 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -214,14 +213,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   titleText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "600",
     color: "#111827",
-    
   },
   headerRight: {
     width: 40,
-  
   },
 
   /** PROGRESS BARS **/
@@ -276,10 +273,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 40,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 7,
   },
   counterButton: {
     width: 48,
@@ -300,7 +293,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    padding: 1,
   },
   dayButton: {
     paddingVertical: 10,
@@ -364,26 +356,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-  },
-
-  /** FAB **/
-  fab: {
-    position: "absolute",
-    bottom: 90,
-    alignSelf: "center",
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-    borderWidth: 4,
-    borderColor: "#FFFFFF",
   },
 });
 

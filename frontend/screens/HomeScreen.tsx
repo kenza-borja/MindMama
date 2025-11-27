@@ -53,9 +53,7 @@ const HomeScreen: React.FC = () => {
             </Text>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.searchIcon}>
-              <Ionicons name="search" size={24} color="black" />
-            </TouchableOpacity>
+            
             <View style={styles.rightHeaderBox} />
           </View>
         </View>
@@ -131,10 +129,7 @@ const HomeScreen: React.FC = () => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      
     </SafeAreaView>
   );
 };
@@ -204,27 +199,7 @@ const styles = StyleSheet.create({
   horizontalScroll: {
     marginBottom: 8,
   },
-  fab: {
-    position: 'absolute',
-    bottom: 80,
-    alignSelf: 'center',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '300',
-  },
+  
 });
 
 export default HomeScreen;
