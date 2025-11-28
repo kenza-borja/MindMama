@@ -74,6 +74,9 @@ Templates are provided below.
 
 ## Backend (`backend/.env`)
 
+To generate Firebase admin credentials:
+Go to Firebase Console → Project settings → Service accounts → Generate private key.
+
 Create a file:
 
 PORT=4000
