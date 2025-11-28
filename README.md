@@ -1,110 +1,81 @@
-# MindMama Backend
+# MindMama
 
-This is the Node.js backend for the MindMama meal-planning system. It provides Firestore data storage, plan and recipe management, and integration with the AI Orchestrator (FastAPI).
+MindMama is a meal-planning and AI-powered recipe assistant designed for busy Muslim mums. The app allows users to plan meals, generate recipes via AI, and build shopping lists automatically.
+
+This repo contains three services:
+
+- `frontend/` — React Native + Expo mobile app
+- `backend/` — Node.js API + Firestore
+- `ai/` — FastAPI AI Orchestrator (LLM recipes & extraction)
 
 ---
 
-## How to Run the Entire System
+## Quick Start
 
-### 1. Clone the repository
+### 1. Clone
 
-~~~
 git clone <repo-url>
 cd MindMama
-~~~
 
-### 2. Start the AI Orchestrator (Python / FastAPI)
+---
 
-Inside the `ai/` directory:
+## Running Each Service
 
-~~~
+### Frontend (Expo React Native)
+
+cd frontend
+npm install
+npm run start   # or: npx expo start
+
+---
+
+### AI Orchestrator (Python FastAPI)
+
 cd ai
 python -m venv .venv
-.venv/Scripts/activate     # Windows
+.venv/Scripts/activate        # Windows
 pip install -r requirements.txt
 uvicorn ai.app.main:app --reload --port 8000
-~~~
 
-The AI server will be available at:
+AI service runs at:
 
-~~~
 http://localhost:8000
-~~~
 
-### 3. Start the Backend (Node.js / Express)
+---
 
-Inside the `backend/` directory:
+### Backend (Node.js / Express)
 
-~~~
 cd backend
 npm install
 npm start
-~~~
 
-Backend will start at:
+Backend runs at:
 
-~~~
 http://localhost:4000
-~~~
-
-Make sure your `.env` file exists and contains your Firebase credentials.
-
-### 4. Test Everything
-
-Use Postman or Thunder Client:
-
-- Test backend:
-  ~~~
-  GET http://localhost:4000/recipes
-  ~~~
-
-- Test AI:
-  ~~~
-  POST http://localhost:8000/ai/suggest-meal
-  ~~~
 
 ---
 
-## Project Structure
+# Test API Endpoints
 
-~~~
-backend/
-  src/
-    api/
-      controllers/
-      routes/
-      middlewares/
-    config/
-      env.js
-      firebase.js
-      orchestrator.js
-    db/
-      plans.db.js
-      recipes.db.js
-    services/
-      meal-planner.service.js
-      recipes.service.js
-      shopping-list.service.js
-      today.service.js
-    app.js
-    index.js
-~~~
+Backend:
+
+GET http://localhost:4000/recipes
+
+AI:
+
+POST http://localhost:8000/ai/suggest-meal
 
 ---
 
-## Requirements
+# ⚙️ Environment Variables
 
-- Node.js (v18+)
-- Firebase Service Account (.env)
-- AI Orchestrator running on port 8000
+We never commit `.env` files.
+Templates are provided below.
 
----
+## Backend (`backend/.env`)
 
-## Environment Variables
+Create a file:
 
-Create `.env` in backend:
-
-~~~
 PORT=4000
 AI_URL=http://localhost:8000
 
@@ -112,91 +83,76 @@ FIREBASE_SERVICE_ACCOUNT={
   "type": "service_account",
   "project_id": "YOUR_PROJECT_ID",
   "private_key_id": "YOUR_KEY_ID",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nXXX\n-----END PRIVATE KEY-----\n",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\nxxx\\n-----END PRIVATE KEY-----\\n",
   "client_email": "firebase-adminsdk@YOUR_PROJECT_ID.iam.gserviceaccount.com",
   "client_id": "000000",
-  "token_uri": "https://oauth2.googleapis.com/token"
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "universe_domain": "googleapis.com"
 }
-~~~
+
+Also see `backend/.env.example` for the template.
 
 ---
 
-## Running the Backend
+## AI (`ai/.env`)
 
-~~~
-npm install
-npm start
-~~~
+Copy `ai/.env.example` → `ai/.env` and fill in:
 
-Backend runs at:
-
-~~~
-http://localhost:4000
-~~~
+OPENAI_API_KEY=your-key
+# OR
+GROQ_API_KEY=your-key
 
 ---
 
-## API Overview
+## Frontend
 
-### Plans
+No `.env` required yet.
+API endpoint is set in:
 
-#### Create a plan
-
-~~~
-POST /plans
-~~~
-
-Example body:
-
-~~~json
-{
-  "startDate": "2025-02-01",
-  "days": [
-    {
-      "date": "2025-02-01",
-      "meals": ["Lunch", "Dinner"]
-    }
-  ]
-}
-~~~
-
-#### Get a plan
-
-~~~
-GET /plans/:id
-~~~
-
-#### Add saved meal to a plan
-
-~~~
-POST /plans/:id/meals/saved
-~~~
-
-Body:
-
-~~~json
-{
-  "date": "2025-02-01",
-  "label": "Lunch",
-  "recipeId": "existingRecipeId"
-}
-~~~
+frontend/lib/api.ts
 
 ---
 
-## AI Meal Generation (Slice 2)
+# Project Structure
 
-The backend integrates with the AI Orchestrator (FastAPI) to generate complete recipes.
+MindMama/
+  frontend/
+  backend/
+    src/
+      api/
+        controllers/
+        routes/
+        middlewares/
+      services/
+      db/
+      config/
+      index.js
+      app.js
+  ai/
+  .gitignore
+  README.md
 
-### Add an AI meal to a plan
+---
 
-~~~
+# Core Features
+
+## Slice 1 — Plans & Recipes (DONE)
+
+✔ Create meal plans  
+✔ Retrieve plans  
+✔ Add saved recipes  
+✔ Save user recipes  
+
+---
+
+## Slice 2 — AI Meal Generation (DONE)
+
+Endpoint:
+
 POST /plans/:id/meals/ai
-~~~
 
-Example request:
+Example:
 
-~~~json
 {
   "date": "2025-02-01",
   "label": "Dinner",
@@ -207,127 +163,105 @@ Example request:
     "preferences_text": "Moroccan"
   }
 }
-~~~
 
-### Expected Flow
+AI returns:
 
-1. Backend sends MealSuggestionRequest to FastAPI:
-   ~~~
-   POST http://localhost:8000/ai/suggest-meal
-   ~~~
-2. AI returns:
-   - title  
-   - ingredients[]  
-   - steps[]  
-   - prep_time  
-   - cook_time  
-3. Backend saves recipe into Firestore (`recipes`)
-4. Backend attaches `recipeId` to the plan
+- title  
+- ingredients[]  
+- steps[]  
+- prep_time  
+- cook_time  
+
+Backend then:
+
+- saves recipe to Firestore  
+- attaches recipe to plan on the given date  
 
 ---
 
-## Recipes
+## Slice 3 — Shopping List (DONE)
 
-#### List all recipes
+POST /shopping-list/:id
 
-~~~
-GET /recipes
-~~~
-
-#### Save custom user recipe
-
-~~~
-POST /recipes
-~~~
+Generates merged ingredient list from recipes.
 
 ---
 
-## Firestore Data Model
+# 🗄 Firestore Data Model
 
 ### plans collection
 
-~~~
 {
-  id: string,
-  startDate: string,
-  days: [
+  "startDate": "2025-02-01",
+  "days": [
     {
-      date: string,
-      meals: [
-        "Lunch",
-        { label: "Dinner", recipeId: "abc123" }
+      "date": "2025-02-01",
+      "meals": [
+        { "label": "Lunch", "recipeId": "xyz123" }
       ]
     }
   ]
 }
-~~~
 
 ### recipes collection
 
-~~~
 {
-  id: string,
-  title: string,
-  ingredients: [],
-  steps: [],
-  prep_time: number,
-  cook_time: number,
-  source: "ai" | "user"
+  "title": "Moroccan Beef Stew",
+  "ingredients": [],
+  "steps": [],
+  "prep_time": 10,
+  "cook_time": 30,
+  "source": "ai"
 }
-~~~
 
 ---
 
-## Development Notes
+# 🛠 Architecture
 
-### Slice 1 (Completed)
+We follow clean separation:
 
-- Plan creation  
-- Plan retrieval  
-- Add saved meals  
-- Save user recipes  
-
-### Slice 2 (Completed)
-
-- AI recipe generation  
-- Save AI recipes to Firestore  
-- Attach AI meals to plan slots  
-
-### Upcoming Slices
-
-- Shopping list generator  
-- Today/Planner service  
-- Frontend integration  
+- `controllers` → HTTP I/O  
+- `services` → business logic  
+- `db` → Firestore layer  
+- `ai/` → AI recipes + parsing  
 
 ---
 
-## Tests
+# 🤖 Commands
 
-~~~
-npm test
-~~~
+### Backend
 
----
+npm start
 
-## Code Quality Guide
+### AI
 
-- Services = business logic  
-- Controllers = HTTP request/response  
-- DB files = Firestore operations  
-- Config = environment + external clients  
+uvicorn ai.app.main:app --reload --port 8000
 
----
+### Frontend
 
-## Deployment (Later)
-
-- Firebase Hosting  
-- Cloud Run or Render  
-- Environment separation (dev/stage/prod)
+npm run start
 
 ---
 
-Backend requires Node 18+
+# Requirements
 
-AI orchestrator requires Python 3.10+
+- Node 18+
+- Python 3.10+
+- Firebase service account
+- Qroq account
 
-You can add /plans/:id/full later for easier frontend work
+---
+
+# Development Notes
+
+- `.env` files are ignored and never committed  
+- AI + backend integration runs locally  
+- Frontend calls REST API through `frontend/lib/api.ts`
+
+---
+
+# 🧭 Roadmap
+
+- User authentication
+- Cloud deployment
+
