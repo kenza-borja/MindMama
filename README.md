@@ -14,57 +14,66 @@ This repo contains three services:
 
 ### 1. Clone
 
+``` 
 git clone <repo-url>
 cd MindMama
-
+``` 
 ---
 
 ## Running Each Service
 
 ### Frontend (Expo React Native)
 
+``` 
 cd frontend
 npm install
 npm run start   # or: npx expo start
+``` 
 
 ---
 
 ### AI Orchestrator (Python FastAPI)
-
+``` 
 cd ai
 python -m venv .venv
 .venv/Scripts/activate        # Windows
 pip install -r requirements.txt
 uvicorn ai.app.main:app --reload --port 8000
-
+``` 
 AI service runs at:
-
+``` 
 http://localhost:8000
-
+``` 
 ---
 
 ### Backend (Node.js / Express)
-
+``` 
 cd backend
 npm install
 npm start
-
+``` 
 Backend runs at:
-
+``` 
 http://localhost:4000
-
+``` 
 ---
+
+## API Reference
+
+For detailed request/response examples and how the frontend should call the backend, see:
+
+- `frontend/API_GUIDE.md`
 
 # Test API Endpoints
 
 Backend:
-
+``` 
 GET http://localhost:4000/recipes
-
+``` 
 AI:
-
+``` 
 POST http://localhost:8000/ai/suggest-meal
-
+``` 
 ---
 
 # Environment Variables
@@ -78,7 +87,7 @@ To generate Firebase admin credentials:
 Go to Firebase Console → Project settings → Service accounts → Generate private key.
 
 Create a file:
-
+``` 
 PORT=4000
 AI_URL=http://localhost:8000
 
@@ -92,18 +101,23 @@ FIREBASE_SERVICE_ACCOUNT={
   "token_uri": "https://oauth2.googleapis.com/token",
   "universe_domain": "googleapis.com"
 }
-
+``` 
 Also see `backend/.env.example` for the template.
 
 ---
 
 ## AI (`ai/.env`)
 
-Copy `ai/.env.example` → `ai/.env` and fill in:
+### Getting a Groq API key (dev-friendly, free tier)
 
-OPENAI_API_KEY=your-key
-# OR
-GROQ_API_KEY=your-key
+1. Go to https://console.groq.com/ and create an account.
+2. Open **API Keys** in the Groq console.
+3. Create a new API key and copy it.
+4. In the `ai/` folder, copy `.env.example` → `.env` and set:
+
+   ```env
+   GROQ_API_KEY=gsk_your_key_here
+   # Optionally comment out OPENAI_API_KEY if you're not using it
 
 ---
 
@@ -116,46 +130,83 @@ frontend/lib/api.ts
 
 ---
 
-# Project Structure
+# API Overview
 
-MindMama/
-  frontend/
-  backend/
-    src/
-      api/
-        controllers/
-        routes/
-        middlewares/
-      services/
-      db/
-      config/
-      index.js
-      app.js
-  ai/
-  .gitignore
-  README.md
+The frontend communicates only with the Node backend.  
+The backend communicates with:
+
+- Firestore (plans & recipes)
+- FastAPI AI Orchestrator (meal suggestions)
 
 ---
 
-# Core Features
+## Plans API
 
-## Slice 1 — Plans & Recipes (DONE)
+### Create a plan
+POST /plans
+``` 
+Request:
+{
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": ["Lunch", "Dinner"]
+    }
+  ]
+}
 
-✔ Create meal plans  
-✔ Retrieve plans  
-✔ Add saved recipes  
-✔ Save user recipes  
-
+Response:
+{
+  "id": "m6BbpThWtpQx5kkWvLDi",
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": ["Lunch", "Dinner"]
+    }
+  ]
+}
+``` 
 ---
 
-## Slice 2 — AI Meal Generation (DONE)
+### Get an existing plan
+GET /plans/:id
+``` 
+Response:
+{
+  "id": "m6BbpThWtpQx5kkWvLDi",
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": [
+        { "label": "Lunch", "recipeId": "xyz123" }
+      ]
+    }
+  ]
+}
+``` 
+---
 
-Endpoint:
+### Add an existing saved recipe
+POST /plans/:id/meals/saved
+``` 
+Request:
+{
+  "date": "2025-02-01",
+  "label": "Dinner",
+  "recipeId": "existingRecipeId"
+}
+``` 
+---
 
+## AI Meal Suggestions
+
+### Add an AI-generated recipe to a plan
 POST /plans/:id/meals/ai
-
-Example:
-
+``` 
+Request:
 {
   "date": "2025-02-01",
   "label": "Dinner",
@@ -166,34 +217,77 @@ Example:
     "preferences_text": "Moroccan"
   }
 }
+``` 
+### What backend does
 
-AI returns:
+1. Sends request to FastAPI:
+   POST http://localhost:8000/ai/suggest-meal
 
-- title  
-- ingredients[]  
-- steps[]  
-- prep_time  
-- cook_time  
+2. AI returns:
+``` 
+   {
+     "title": "Moroccan Beef Stew",
+     "ingredients": ["1 onion", "2 tomatoes"],
+     "steps": ["Fry onions", "Add beef"],
+     "prep_time": 15,
+     "cook_time": 30
+   }
+```
 
-Backend then:
+4. Backend saves the recipe.
+5. Backend attaches the recipe to plan on the date provided.
 
-- saves recipe to Firestore  
-- attaches recipe to plan on the given date  
+Frontend does NOT talk to AI directly.
 
 ---
 
-## Slice 3 — Shopping List (DONE)
+## Recipes API
 
-POST /shopping-list/:id
+### List all recipes
+GET /recipes
 
-Generates merged ingredient list from recipes.
-
+### Save a new recipe
+POST /recipes
+``` 
+Body:
+{
+  "title": "Chicken Pie",
+  "ingredients": ["2 chicken breasts", "1 onion"],
+  "steps": ["Chop onion", "Fry chicken"]
+}
+``` 
 ---
 
-# 🗄 Firestore Data Model
+## Shopping List API
 
-### plans collection
+POST /shopping-list/:planId
+``` 
+Response:
+{
+  "planId": "PLAN_ID",
+  "items": [
+    {
+      "name": "tomatoes",
+      "lines": [
+        "2 tomatoes",
+        "200g chopped tomatoes"
+      ]
+    },
+    {
+      "name": "onion",
+      "lines": [
+        "1 onion"
+      ]
+    }
+  ]
+}
+``` 
+---
 
+# Firestore Data Model
+
+### plans collection:
+``` 
 {
   "startDate": "2025-02-01",
   "days": [
@@ -205,9 +299,9 @@ Generates merged ingredient list from recipes.
     }
   ]
 }
-
-### recipes collection
-
+```
+### recipes collection:
+```
 {
   "title": "Moroccan Beef Stew",
   "ingredients": [],
@@ -216,6 +310,19 @@ Generates merged ingredient list from recipes.
   "cook_time": 30,
   "source": "ai"
 }
+``` 
+---
+
+## Endpoints the Frontend Uses
+
+POST /plans  
+GET /plans/:id  
+POST /plans/:id/meals/ai  
+POST /plans/:id/meals/saved  
+GET /recipes  
+POST /shopping-list/:planId  
+
+No AI endpoint is called by the frontend.
 
 ---
 
@@ -246,12 +353,18 @@ npm run start
 
 ---
 
+## Development workflow
+
+- AI runs on `http://localhost:8000`
+- Backend runs on `http://localhost:4000`
+- Frontend calls the backend via `frontend/lib/api.ts`
+
 # Requirements
 
 - Node 18+
 - Python 3.10+
 - Firebase service account
-- Qroq account
+- Groq account
 
 ---
 
