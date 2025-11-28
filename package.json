@@ -1,7 +1,7 @@
 {
   "name": "mindmama",
   "version": "1.0.0",
-  "description": "HommieHelp is an AI-powered meal planning assistant designed to reduce the mental load of household management. It uses advanced language models to:",
+  "description": "MindMama is an AI-powered meal planning assistant designed to reduce the mental load of household management. It uses advanced language models to:",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
