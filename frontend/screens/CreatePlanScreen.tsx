@@ -1,20 +1,18 @@
-// screens/CreateMealScreen.tsx
 import React, { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
   View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
+import { COLORS } from "../theme/colors";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 
-interface CreateMealScreenProps {
-  navigation: any;
-}
-
-const daysOfWeek = [
+const DAYS = [
   "Monday",
   "Tuesday",
   "Wednesday",
@@ -23,340 +21,162 @@ const daysOfWeek = [
   "Saturday",
   "Sunday",
 ];
-const recipeOptions = ["New recipe", "Save", "Suggestion from AI"];
+const MEALS = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+const RECIPESOURCE = ["Suggestion from AI", "New Recipe", "Saved"];
 
-const CreateMealScreen: React.FC<CreateMealScreenProps> = ({ navigation }) => {
-  const [numberOfDays, setNumberOfDays] = useState(2);
+export default function CreatePlanScreen() {
+  type NavProp = NativeStackNavigationProp<RootStackParamList, "CreatePlan">;
+  const nav = useNavigation<NavProp>();
+
   const [selectedDays, setSelectedDays] = useState<string[]>(["Monday"]);
-  const [selectedRecipeOption, setSelectedRecipeOption] =
-    useState("New recipe");
+  const [selectedMealTypes, setSelectedMealTypes] = useState<string[]>([
+    "Lunch",
+  ]);
+  const [selectedRecipeSource, setSelectedRecipeSource] = useState<
+    string | null
+  >(null);
 
-  const handleDayToggle = (day: string) => {
-    if (selectedDays.includes(day)) {
-      setSelectedDays(selectedDays.filter((d) => d !== day));
-    } else {
-      setSelectedDays([...selectedDays, day]);
-    }
-  };
+  function toggleDay(day: string) {
+    setSelectedDays((s) =>
+      s.includes(day) ? s.filter((d) => d !== day) : [...s, day]
+    );
+  }
+  function toggleMeal(m: string) {
+    setSelectedMealTypes((s) =>
+      s.includes(m) ? s.filter((x) => x !== m) : [...s, m]
+    );
+  }
+  function handleNext() {
+    if (!selectedRecipeSource) return;
 
-  const handleIncrement = () => {
-    if (numberOfDays < 7) {
-      setNumberOfDays(numberOfDays + 1);
-    }
-  };
-
-  const handleDecrement = () => {
-    if (numberOfDays > 1) {
-      setNumberOfDays(numberOfDays - 1);
-    }
-  };
-
-  const handleNext = () => {
-  navigation.navigate('SelectRecipes', {
-    numberOfDays,
-    selectedDays,
-    selectedRecipeOption,
-  });
-};
+    if (selectedRecipeSource === "Suggestion from AI") {
+      nav.navigate("AIGenerate");
+    } else if (selectedRecipeSource === "New Recipe") {
+      nav.navigate("CreateRecipe");
+    } else if (selectedRecipeSource === "Saved") {
+nav.navigate("MealPlan", {
+        numberOfDays: selectedDays.length, 
+        selectedDays: selectedDays,
+        selectedRecipeOption: selectedRecipeSource,
+    });    }
+  }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={28} color="#111827" />
-        </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <Text style={styles.title}>Sara's Kitchen</Text>
+        <Text style={styles.subtitle}>Let's create your meals !</Text>
 
-        <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>Sara's kitchen</Text>
-          <Ionicons name="restaurant-outline" size={24} color="#111827" />
-        </View>
-
-        {/* Empty view for layout balance */}
-        <View style={styles.headerRight} />
-      </View>
-
-      {/* Progress Indicator */}
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressBar, styles.progressActive]} />
-        <View style={styles.progressBar} />
-        <View style={styles.progressBar} />
-        <View style={styles.progressBar} />
-        <View style={styles.progressBar} />
-      </View>
-
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Main Title */}
-        <Text style={styles.mainTitle}>Let's create your meals !</Text>
-
-        {/* How many days? */}
         <View style={styles.card}>
-          <Text style={styles.questionText}>How many days ?</Text>
-          <View style={styles.counterContainer}>
-            <TouchableOpacity
-              style={styles.counterButton}
-              onPress={handleDecrement}
-            >
-              <Ionicons name="remove" size={24} color="#6B7280" />
-            </TouchableOpacity>
-
-            <Text style={styles.counterValue}>{numberOfDays}</Text>
-
-            <TouchableOpacity
-              style={styles.counterButton}
-              onPress={handleIncrement}
-            >
-              <Ionicons name="add" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Which days? */}
-        <View style={styles.card}>
-          <Text style={styles.questionText}>Which days ?</Text>
-          <View style={styles.daysContainer}>
-            {daysOfWeek.map((day) => (
-              <TouchableOpacity
-                key={day}
-                style={[
-                  styles.dayButton,
-                  selectedDays.includes(day) && styles.dayButtonSelected,
-                ]}
-                onPress={() => handleDayToggle(day)}
-              >
-                <Text
-                  style={[
-                    styles.dayText,
-                    selectedDays.includes(day) && styles.dayTextSelected,
-                  ]}
-                >
-                  {day}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Where do you want take your recipe? */}
-        <View style={styles.card}>
-          <Text style={styles.questionText}>
-            Where do you want take your receipe ?
+          <Text style={styles.label}>
+            Which days would you like to plan for?
           </Text>
-          <View style={styles.optionsContainer}>
-            {recipeOptions.map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.optionButton,
-                  selectedRecipeOption === option &&
-                    styles.optionButtonSelected,
-                ]}
-                onPress={() => setSelectedRecipeOption(option)}
-              >
-                <Text
+          <View style={styles.rowWrap}>
+            {DAYS.map((d) => {
+              const selected = selectedDays.includes(d);
+              return (
+                <TouchableOpacity
+                  key={d}
+                  onPress={() => toggleDay(d)}
                   style={[
-                    styles.optionText,
-                    selectedRecipeOption === option &&
-                      styles.optionTextSelected,
+                    styles.pill,
+                    selected && { backgroundColor: COLORS.pillSelected },
                   ]}
                 >
-                  {option}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={styles.pillText}>{d}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
-        {/* NEXT BUTTON */}
-        <View style={styles.nextButtonWrapper}>
-          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-            <Text style={styles.nextButtonText}>Next</Text>
-          </TouchableOpacity>
+        <View style={styles.card}>
+          <Text style={[styles.label, { marginTop: 18 }]}>Which meals?</Text>
+          <View style={styles.rowWrap}>
+            {MEALS.map((m) => {
+              const selected = selectedMealTypes.includes(m);
+              return (
+                <TouchableOpacity
+                  key={m}
+                  onPress={() => toggleMeal(m)}
+                  style={[
+                    styles.pill,
+                    selected && { backgroundColor: COLORS.pillSelected },
+                  ]}
+                >
+                  <Text style={styles.pillText}>{m}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
-        {/* Bottom spacing */}
-        <View style={{ height: 120 }} />
+        <View style={styles.card}>
+          <Text style={[styles.label, { marginTop: 18 }]}>Recipe Source</Text>
+          <View style={styles.rowWrap}>
+            {RECIPESOURCE.map((m) => {
+              const selected = selectedRecipeSource === m;
+              return (
+                <TouchableOpacity
+                  key={m}
+                  onPress={() => setSelectedRecipeSource(m)}
+                  style={[
+                    styles.pill,
+                    selected && { backgroundColor: COLORS.pillSelected },
+                  ]}
+                >
+                  <Text style={styles.pillText}>{m}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.generateBtn} onPress={handleNext}>
+          <Text style={{ color: COLORS.white, fontFamily: "Roboto_700Bold" }}>
+            Next
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-
-  /** HEADER **/
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  titleText: {
+  container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
+  title: { fontFamily: "Roboto_700Bold", fontSize: 30, marginBottom: 12 },
+  subtitle: {
+    fontFamily: "Roboto_400Regular",
     fontSize: 20,
-    fontWeight: "600",
-    color: "#111827",
+    marginBottom: 20,
+    color: COLORS.muted,
   },
-  headerRight: {
-    width: 40,
-  },
-
-  /** PROGRESS BARS **/
-  progressContainer: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  progressBar: {
-    flex: 1,
-    height: 3,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 2,
-  },
-  progressActive: {
-    backgroundColor: "#6B7280",
-  },
-
-  /** BODY **/
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  mainTitle: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 24,
-    color: "#111827",
-  },
-
-  /** CARDS **/
+  label: { fontFamily: "Roboto_700Bold", marginBottom: 8, color: COLORS.muted },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
+    padding: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 16,
-  },
-  questionText: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-    color: "#111827",
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    marginBottom: 10,
+    marginTop: 10,
   },
 
-  /** COUNTER **/
-  counterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 40,
-  },
-  counterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  counterValue: {
-    fontSize: 32,
-    fontWeight: "600",
-    color: "#111827",
-  },
-
-  /** DAYS + OPTIONS CHIPS **/
-  daysContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  dayButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+  rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  pill: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
     borderWidth: 1,
-    borderColor: "transparent",
+    borderColor: COLORS.primary,
+    marginRight: 8,
+    marginBottom: 8,
   },
-  dayButtonSelected: {
-    backgroundColor: "#E5E7EB",
-    borderColor: "#D1D5DB",
-  },
-  dayText: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  dayTextSelected: {
-    color: "#111827",
-    fontWeight: "600",
-  },
-
-  optionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  optionButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  optionButtonSelected: {
-    backgroundColor: "#E5E7EB",
-    borderColor: "#D1D5DB",
-  },
-  optionText: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  optionTextSelected: {
-    color: "#111827",
-    fontWeight: "600",
-  },
-
-  /** NEXT BUTTON **/
-  nextButtonWrapper: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  nextButton: {
-    backgroundColor: "#9CA3AF",
-    paddingVertical: 16,
-    borderRadius: 12,
+  pillText: { fontFamily: "Roboto_400Regular" },
+  generateBtn: {
+    marginTop: 24,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: "center",
-  },
-  nextButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
-
-export default CreateMealScreen;

@@ -1,9 +1,9 @@
-// src/screens/LaunchScreen.tsx
 import React, { useEffect } from "react";
 import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../theme/colors";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import  "../assets/logo.png";
 import { RootStackParamList } from "../navigation";
 export default function LaunchScreen() {
   type NavProp = NativeStackNavigationProp<RootStackParamList, "Launch">;
@@ -17,7 +17,7 @@ const nav = useNavigation<NavProp>();
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => nav.navigate("Home")} activeOpacity={0.8}>
-        <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
+        <Image source={require("../assets/logo.png")} style={styles.logo} resizeMode="contain" />
       </TouchableOpacity>
     </View>
   );

@@ -1,4 +1,3 @@
-// screens/CategoryRecipesScreen.tsx
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -10,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-interface CategoryRecipesScreenProps {
+interface ViewRecipeScreenProps {
   navigation: any;
   route: any;
 }
@@ -32,7 +31,7 @@ const mockRecipes: Recipe[] = [
   { id: '6', title: 'Lorem ipsum dolor', description: 'sit amet', added: false },
 ];
 
-const CategoryRecipesScreen: React.FC<CategoryRecipesScreenProps> = ({ navigation, route }) => {
+const ViewRecipeScreen: React.FC<ViewRecipeScreenProps> = ({ navigation, route }) => {
   const category = route?.params?.category || 'Lunch';
   const [recipes, setRecipes] = useState<Recipe[]>(mockRecipes);
 
@@ -269,4 +268,4 @@ const styles = StyleSheet.create({
   
 });
 
-export default CategoryRecipesScreen;
+export default ViewRecipeScreen;

@@ -1,205 +1,60 @@
-// screens/HomeScreen.tsx
-import React from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
-import {
-  Ionicons,
-  FontAwesome5,
-  MaterialCommunityIcons,
-} from '@expo/vector-icons';
+import React from "react";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from "react-native";
+import { COLORS } from "../theme/colors";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation";
 
-
-import { PillButton } from '../components/PillButton';
-import { RecipeCard } from '../components/RecipeCard';
-import { MealCard } from '../components/MealCard';
-
-const { width } = Dimensions.get('window');
-
-// Mock data
-const mealOfTheDayData = [
-  { day: 'Mon', date: '17', month: 'Nov', meal: 'Breakfast', selected: false },
-  { day: 'Tue', date: '18', month: 'Nov', meal: 'Breakfast', selected: true },
-  { day: 'Wed', date: '19', month: 'Nov', meal: 'Lunch', selected: false },
-  { day: 'Thu', date: '20', month: 'Nov', meal: 'Dinner', selected: false },
-  { day: 'Fri', date: '21', month: 'Nov', meal: 'Dinner', selected: false },
+const dummyPlans = [
+  { id: "p1", title: "Monday's Lunch Plan", meals: ["Chicken Pie"] },
+  { id: "p2", title: "Monday's Dinner Plan", meals: ["Tajine"] },
 ];
 
-const categories = ['Breakfast', 'Lunch', 'Dinner', 'Deserts', 'Snacks'];
-
-const HomeScreen: React.FC = () => {
+export default function HomeScreen() {
+type NavProp = NativeStackNavigationProp<RootStackParamList, "Home">;
+const nav = useNavigation<NavProp>();
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.titleContainer}>
-              <Text style={styles.titleText}>Sara's kitchen</Text>
-              <MaterialCommunityIcons 
-                name="silverware-fork-knife" 
-                size={24} 
-                color="#000" 
-              />
-            </View>
-            <Text style={styles.subtitleText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit
-            </Text>
+    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sara's kitchen</Text>
+
+      <FlatList
+        data={dummyPlans}
+        keyExtractor={(i) => i.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardSubtitle}>{item.meals.join(", ")}</Text>
           </View>
-          <View style={styles.headerRight}>
-            
-            <View style={styles.rightHeaderBox} />
-          </View>
-        </View>
+        )}
+      />
 
-        {/* Meal of the Day Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>MEAL OF THE DAY</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View all</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.horizontalScroll}
-        >
-          {mealOfTheDayData.map((item, index) => (
-            <MealCard key={index} {...item} />
-          ))}
-        </ScrollView>
+      <TouchableOpacity style={styles.primaryBtn} onPress={() => nav.navigate("CreatePlan" as any)}>
+        <Text style={styles.btnText}>Create or Edit Plan</Text>
+      </TouchableOpacity>
 
-        {/* Categories Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>CATEGORIES</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View all</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.horizontalScroll}
-        >
-          {categories.map((category, index) => (
-            <PillButton
-              key={index}
-              label={category}
-              selected={index === 0}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Last Recipes Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>LAST RECIPES</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View all</Text>
-          </TouchableOpacity>
-        </View>
-        <RecipeCard
-          title="Lorem Ipsum Dolor"
-          large={true}
-          details={{ rating: 5, time: '20 min' }}
-        />
-
-        {/* Favorites Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>FAVORITES</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View all</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.horizontalScroll}
-        >
-          <RecipeCard title="Recipe 1" large={false} />
-          <RecipeCard title="Recipe 2" large={false} />
-          <RecipeCard title="Recipe 3" large={false} />
-        </ScrollView>
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      
+      <TouchableOpacity style={styles.secondaryBtn} onPress={() => nav.navigate("ShoppingList" as any)}>
+        <Text style={styles.secondaryText}>View My Shopping List</Text>
+      </TouchableOpacity>
+    </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: { flex: 1,  padding: 20,  backgroundColor: COLORS.white },
+  title: { fontFamily: "Roboto_700Bold", fontSize: 30, marginBottom: 10, color: COLORS.text },
+  card: { padding: 12, borderWidth: 1, borderColor: COLORS.primary, borderRadius: 8, marginBottom: 10, marginTop: 10 },
+  cardTitle: { fontFamily: "Roboto_700Bold", fontSize: 20 },
+  cardSubtitle: { fontFamily: "Roboto_400Regular", fontSize: 16, color: COLORS.muted, marginTop: 4 },
+  primaryBtn: {
+    backgroundColor: COLORS.primary,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
   },
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  titleText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  subtitleText: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  searchIcon: {
-    padding: 4,
-  },
-  rightHeaderBox: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#ddd',
-    borderRadius: 8,
-  },
-  section: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  sectionHeader: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  viewAllText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  horizontalScroll: {
-    marginBottom: 8,
-  },
-  
+  btnText: { fontFamily: "Roboto_700Bold", fontSize: 20, color: COLORS.white },
+  secondaryBtn: { marginTop: 8, padding: 12, alignItems: "center" },
+  secondaryText: { color: COLORS.primary, fontSize: 20, },
 });
-
-export default HomeScreen;
