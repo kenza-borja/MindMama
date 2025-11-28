@@ -38,10 +38,7 @@ export async function getPlan(planId: string) {
   return handleResponse(res);
 }
 
-export async function addSavedMealToPlan(
-  planId: string,
-  payload: AddMealPayload
-) {
+export async function addSavedMealToPlan(planId: string, payload: AddMealPayload) {
   const res = await fetch(`${API_BASE_URL}/plans/${planId}/meals/saved`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -67,15 +64,6 @@ export async function listRecipes() {
 export async function getShoppingList(planId: string) {
   const res = await fetch(`${API_BASE_URL}/shopping-list/${planId}`, {
     method: "POST",
-  });
-  return handleResponse(res);
-}
-
-export async function saveRecipe(payload: any) {
-  const res = await fetch(`${API_BASE_URL}/recipes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }

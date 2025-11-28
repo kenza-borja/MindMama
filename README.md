@@ -1,162 +1,383 @@
 # MindMama
 
-mobile/ → React Native (Expo) app
+MindMama is a meal-planning and AI-powered recipe assistant designed for busy Muslim mums. The app allows users to plan meals, generate recipes via AI, and build shopping lists automatically.
 
-api/ → Node.js + Express backend API
+This repo contains three services:
 
-This README explains how to install, run, test, and develop both projects.
+- `frontend/` — React Native + Expo mobile app
+- `backend/` — Node.js API + Firestore
+- `ai/` — FastAPI AI Orchestrator (LLM recipes & extraction)
 
-🚀 Requirements
+---
 
-Make sure you have these installed:
+## Quick Start
 
-Node.js (LTS recommended)
+### 1. Clone
 
-npm or yarn
-
-Git
-
-Expo CLI (installed automatically when running npx expo)
-
-Android device OR Android emulator (if running the mobile app)
-
-Local network access (phone & laptop on same WiFi)
-
-📦 Installation
-
-Clone the project:
-
-git clone <your-repo-url>
+``` 
+git clone <repo-url>
 cd MindMama
+``` 
+---
 
+## Running Each Service
 
-Install dependencies for both apps:
+### Frontend (Expo React Native)
 
-API
-cd api
+``` 
+cd frontend
 npm install
+npm run start   # or: npx expo start
+``` 
 
-Mobile App
-cd ../mobile
+---
+
+### AI Orchestrator (Python FastAPI)
+``` 
+cd ai
+python -m venv .venv
+.venv/Scripts/activate        # Windows
+pip install -r requirements.txt
+uvicorn ai.app.main:app --reload --port 8000
+``` 
+AI service runs at:
+``` 
+http://localhost:8000
+``` 
+---
+
+### Backend (Node.js / Express)
+``` 
+cd backend
 npm install
+npm start
+``` 
+Backend runs at:
+``` 
+http://localhost:4000
+``` 
+---
 
-▶️ Running the API (Backend)
+## API Reference
 
-Inside the api/ folder:
+For detailed request/response examples and how the frontend should call the backend, see:
+
+- `frontend/API_GUIDE.md`
+
+# Test API Endpoints
+
+Backend:
+``` 
+GET http://localhost:4000/recipes
+``` 
+AI:
+``` 
+POST http://localhost:8000/ai/suggest-meal
+``` 
+---
+
+# Environment Variables
+
+We never commit `.env` files.
+Templates are provided below.
+
+## Backend (`backend/.env`)
+
+To generate Firebase admin credentials:
+Go to Firebase Console → Project settings → Service accounts → Generate private key.
+
+Create a file:
+``` 
+PORT=4000
+AI_URL=http://localhost:8000
+
+FIREBASE_SERVICE_ACCOUNT={
+  "type": "service_account",
+  "project_id": "YOUR_PROJECT_ID",
+  "private_key_id": "YOUR_KEY_ID",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\nxxx\\n-----END PRIVATE KEY-----\\n",
+  "client_email": "firebase-adminsdk@YOUR_PROJECT_ID.iam.gserviceaccount.com",
+  "client_id": "000000",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "universe_domain": "googleapis.com"
+}
+``` 
+Also see `backend/.env.example` for the template.
+
+---
+
+## AI (`ai/.env`)
+
+### Getting a Groq API key (dev-friendly, free tier)
+
+1. Go to https://console.groq.com/ and create an account.
+2. Open **API Keys** in the Groq console.
+3. Create a new API key and copy it.
+4. In the `ai/` folder, copy `.env.example` → `.env` and set:
+
+   ```env
+   GROQ_API_KEY=gsk_your_key_here
+   # Optionally comment out OPENAI_API_KEY if you're not using it
+
+---
+
+## Frontend
+
+No `.env` required yet.
+API endpoint is set in:
+
+frontend/lib/api.ts
+
+---
+
+# API Overview
+
+The frontend communicates only with the Node backend.  
+The backend communicates with:
+
+- Firestore (plans & recipes)
+- FastAPI AI Orchestrator (meal suggestions)
+
+---
+
+## Plans API
+
+### Create a plan
+POST /plans
+``` 
+Request:
+{
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": ["Lunch", "Dinner"]
+    }
+  ]
+}
+
+Response:
+{
+  "id": "m6BbpThWtpQx5kkWvLDi",
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": ["Lunch", "Dinner"]
+    }
+  ]
+}
+``` 
+---
+
+### Get an existing plan
+GET /plans/:id
+``` 
+Response:
+{
+  "id": "m6BbpThWtpQx5kkWvLDi",
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": [
+        { "label": "Lunch", "recipeId": "xyz123" }
+      ]
+    }
+  ]
+}
+``` 
+---
+
+### Add an existing saved recipe
+POST /plans/:id/meals/saved
+``` 
+Request:
+{
+  "date": "2025-02-01",
+  "label": "Dinner",
+  "recipeId": "existingRecipeId"
+}
+``` 
+---
+
+## AI Meal Suggestions
+
+### Add an AI-generated recipe to a plan
+POST /plans/:id/meals/ai
+``` 
+Request:
+{
+  "date": "2025-02-01",
+  "label": "Dinner",
+  "preferences": {
+    "num_people": 2,
+    "time_available": 45,
+    "dietary_restrictions": [],
+    "preferences_text": "Moroccan"
+  }
+}
+``` 
+### What backend does
+
+1. Sends request to FastAPI:
+   POST http://localhost:8000/ai/suggest-meal
+
+2. AI returns:
+``` 
+   {
+     "title": "Moroccan Beef Stew",
+     "ingredients": ["1 onion", "2 tomatoes"],
+     "steps": ["Fry onions", "Add beef"],
+     "prep_time": 15,
+     "cook_time": 30
+   }
+```
+
+4. Backend saves the recipe.
+5. Backend attaches the recipe to plan on the date provided.
+
+Frontend does NOT talk to AI directly.
+
+---
+
+## Recipes API
+
+### List all recipes
+GET /recipes
+
+### Save a new recipe
+POST /recipes
+``` 
+Body:
+{
+  "title": "Chicken Pie",
+  "ingredients": ["2 chicken breasts", "1 onion"],
+  "steps": ["Chop onion", "Fry chicken"]
+}
+``` 
+---
+
+## Shopping List API
+
+POST /shopping-list/:planId
+``` 
+Response:
+{
+  "planId": "PLAN_ID",
+  "items": [
+    {
+      "name": "tomatoes",
+      "lines": [
+        "2 tomatoes",
+        "200g chopped tomatoes"
+      ]
+    },
+    {
+      "name": "onion",
+      "lines": [
+        "1 onion"
+      ]
+    }
+  ]
+}
+``` 
+---
+
+# Firestore Data Model
+
+### plans collection:
+``` 
+{
+  "startDate": "2025-02-01",
+  "days": [
+    {
+      "date": "2025-02-01",
+      "meals": [
+        { "label": "Lunch", "recipeId": "xyz123" }
+      ]
+    }
+  ]
+}
+```
+### recipes collection:
+```
+{
+  "title": "Moroccan Beef Stew",
+  "ingredients": [],
+  "steps": [],
+  "prep_time": 10,
+  "cook_time": 30,
+  "source": "ai"
+}
+``` 
+---
+
+## Endpoints the Frontend Uses
+
+POST /plans  
+GET /plans/:id  
+POST /plans/:id/meals/ai  
+POST /plans/:id/meals/saved  
+GET /recipes  
+POST /shopping-list/:planId  
+
+No AI endpoint is called by the frontend.
+
+---
+
+# Architecture
+
+We follow clean separation:
+
+- `controllers` → HTTP I/O  
+- `services` → business logic  
+- `db` → Firestore layer  
+- `ai/` → AI recipes + parsing  
+
+---
+
+# Commands
+
+### Backend
 
 npm start
 
+### AI
 
-The backend will run at:
+uvicorn ai.app.main:app --reload --port 8000
 
-http://0.0.0.0:4000
+### Frontend
 
+npm run start
 
-If accessing it on your laptop:
+---
 
-http://localhost:4000
+## Development workflow
 
+- AI runs on `http://localhost:8000`
+- Backend runs on `http://localhost:4000`
+- Frontend calls the backend via `frontend/lib/api.ts`
 
-If accessing it from your phone:
+# Requirements
 
-http://YOUR_LAPTOP_IP:4000
+- Node 18+
+- Python 3.10+
+- Firebase service account
+- Groq account
 
+---
 
-(You can find your local IP by running ipconfig.)
+# Development Notes
 
-▶️ Running the Mobile App
+- `.env` files are ignored and never committed  
+- AI + backend integration runs locally  
+- Frontend calls REST API through `frontend/lib/api.ts`
 
-Inside the mobile/ folder:
+---
 
-npx expo start
+# Roadmap
 
+- User authentication
+- Cloud deployment
 
-Then choose one of these:
-
-Press w to run in a browser
-
-Press a to run on Android emulator
-
-Scan the QR code with Expo Go on your physical phone
-
-Make sure your phone and laptop are on the same WiFi and Norton/firewall is not blocking the local API port (4000).
-
-🔌 Connecting Mobile App → API
-
-In your mobile app’s configuration file (usually constants.js, .env, or inside fetch calls):
-
-Set the backend base URL to your laptop’s IP:
-
-export const API_URL = "http://YOUR_LAPTOP_IP:4000";
-
-
-Example:
-
-export const API_URL = "http://192.163.1.136:4000";
-
-🧪 Testing
-
-If you add tests later:
-
-npm test
-
-
-📝 Git Guidelines
-Commit messages
-
-Use simple, readable commit messages like:
-
-feat: add API server setup
-fix: backend not reachable on network
-chore: clean up build folders
-refactor: simplify API routes
-
-Branch workflow
-
-Create a branch
-
-git checkout -b feature/something
-
-
-Make changes, commit
-
-git add .
-git commit -m "feat: description of work"
-
-
-Push
-
-git push origin feature/something
-
-
-Open a Pull Request
-
-Write what you changed
-
-Mention any issues it fixes
-
-Include screenshots if needed
-
-
-📣 Troubleshooting
-Backend not reachable from phone
-
-Ensure both devices are on same WiFi
-
-Use your local IP, not localhost
-
-Allow port 4000 through firewall
-
-Disable or whitelist the API in Norton
-
-Android emulator not detected
-
-Start it manually from Android Studio:
-
-Device Manager → Start Emulator
-
-Expo app stuck loading
-
-Clear Metro cache:
-
-npx expo start --clear

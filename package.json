@@ -1,0 +1,27 @@
+{
+  "name": "mindmama",
+  "version": "1.0.0",
+  "description": "HommieHelp is an AI-powered meal planning assistant designed to reduce the mental load of household management. It uses advanced language models to:",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kenza-borja/MindMama.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kenza-borja/MindMama/issues"
+  },
+  "homepage": "https://github.com/kenza-borja/MindMama#readme",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.6.0"
+  },
+  "type": "module"
+}
