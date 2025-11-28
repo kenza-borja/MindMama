@@ -9,11 +9,13 @@ import RecipesLibraryScreen from "../screens/RecipesLibraryScreen";
 import ViewRecipeScreen from "../screens/ViewRecipeScreen";
 import MealPlanScreen from "screens/MealPlanScreen";
 import CreateRecipeScreen from "screens/CreateRecipeScreen";
+import ShoppingListScreen from "screens/ShoppingListScreen.tsx";
+
 export type RootStackParamList = {
   Launch: undefined;
   Home: undefined;
   CreatePlan: undefined;
-  AIGenerate: { planId?: string } | undefined;
+  AIGenerate: { planId?: string; date?: string; label?: string } | undefined;
   AISuggestion: { aiResult?: any; planId?: string } | undefined;
   RecipesLibrary: { planId?: string } | undefined;
   ViewRecipe: { category: string; recipe?: any; planId?: string } | undefined;
@@ -22,9 +24,8 @@ export type RootStackParamList = {
     numberOfDays: number;
     selectedDays: string[];
     selectedRecipeOption: string;
-  } ;
+  };
   CreateRecipe: { planId?: string } | undefined;
-  
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,6 +47,7 @@ function RootNavigator() {
       <Stack.Screen name="ViewRecipe" component={ViewRecipeScreen} />
       <Stack.Screen name="MealPlan" component={MealPlanScreen} />
       <Stack.Screen name="CreateRecipe" component={CreateRecipeScreen} />
+      <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
     </Stack.Navigator>
   );
 }

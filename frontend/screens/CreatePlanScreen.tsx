@@ -50,7 +50,11 @@ export default function CreatePlanScreen() {
     if (!selectedRecipeSource) return;
 
     if (selectedRecipeSource === "Suggestion from AI") {
-      nav.navigate("AIGenerate");
+      nav.navigate("AIGenerate", {
+        planId: "1", 
+        date: selectedDays[0], 
+        label: selectedMealTypes[0],
+      });
     } else if (selectedRecipeSource === "New Recipe") {
       nav.navigate("CreateRecipe");
     } else if (selectedRecipeSource === "Saved") {

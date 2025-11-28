@@ -1,26 +1,61 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { COLORS } from "../theme/colors";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation";
+import { addAiMealToPlan } from "../lib/api";
 
 export default function AIGenerateScreen() {
   type NavProp = NativeStackNavigationProp<RootStackParamList, "AIGenerate">;
-const nav = useNavigation<NavProp>();
+  const nav = useNavigation<NavProp>();
+
+  const route = useRoute();
+  const { planId, date, label } = route.params as {
+    planId: string;
+    date: string;
+    label: string;
+  };
+
   const [people, setPeople] = useState("2");
   const [time, setTime] = useState("");
   const [dietary, setDietary] = useState("");
   const [preferences, setPreferences] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function generate() {
-    // Normally call backend AI endpoint -> for now navigate to preview and pass the input
-    const aiResult = {
-      title: "Chicken & fries",
-      ingredients: ["Chicken", "Oil", "Spices"],
-      instructions: "Fry and season. Serve warm.",
-    };
-    nav.navigate("AISuggestion" as any, { aiResult });
+  async function generate() {
+    try {
+      setLoading(true);
+
+      const payload = {
+        date,
+        label,
+        preferences: {
+          people,
+          time,
+          dietary,
+          preferences,
+        },
+      };
+
+      //  Call backend AI endpoint
+      const aiResult = await addAiMealToPlan(planId, payload);
+
+      // Navigate to preview screen with actual backend data
+      nav.navigate("AISuggestion" as any, { aiResult });
+    } catch (err: any) {
+      alert(err.message || "AI meal generation failed.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -28,7 +63,12 @@ const nav = useNavigation<NavProp>();
       <Text style={styles.title}>Hi, AI needs to know!</Text>
 
       <Text style={styles.label}>How many people are you cooking for?</Text>
-      <TextInput style={styles.input} value={people} onChangeText={setPeople} keyboardType="numeric" />
+      <TextInput
+        style={styles.input}
+        value={people}
+        onChangeText={setPeople}
+        keyboardType="numeric"
+      />
 
       <Text style={styles.label}>Prep and cook time?</Text>
       <TextInput style={styles.input} value={time} onChangeText={setTime} />
@@ -37,10 +77,25 @@ const nav = useNavigation<NavProp>();
       <TextInput style={styles.input} value={dietary} onChangeText={setDietary} />
 
       <Text style={styles.label}>Preferences</Text>
-      <TextInput style={[styles.input, { height: 100 }]} value={preferences} onChangeText={setPreferences} multiline />
+      <TextInput
+        style={[styles.input, { height: 100 }]}
+        value={preferences}
+        onChangeText={setPreferences}
+        multiline
+      />
 
-      <TouchableOpacity style={styles.generateBtn} onPress={generate}>
-        <Text style={{ color: COLORS.white, fontFamily: "Roboto_700Bold" }}>Generate</Text>
+      <TouchableOpacity
+        style={styles.generateBtn}
+        onPress={generate}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color={COLORS.white} />
+        ) : (
+          <Text style={{ color: COLORS.white, fontFamily: "Roboto_700Bold" }}>
+            Generate
+          </Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -58,5 +113,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontFamily: "Roboto_400Regular",
   },
-  generateBtn: { marginTop: 20, backgroundColor: COLORS.primary, padding: 14, borderRadius: 10, alignItems: "center" },
+  generateBtn: {
+    marginTop: 20,
+    backgroundColor: COLORS.primary,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
 });

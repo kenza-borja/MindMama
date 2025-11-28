@@ -70,3 +70,12 @@ export async function getShoppingList(planId: string) {
   });
   return handleResponse(res);
 }
+
+export async function saveRecipe(payload: any) {
+  const res = await fetch(`${API_BASE_URL}/recipes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
