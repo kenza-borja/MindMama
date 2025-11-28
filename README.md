@@ -333,7 +333,16 @@ We follow clean separation:
 - `controllers` → HTTP I/O  
 - `services` → business logic  
 - `db` → Firestore layer  
-- `ai/` → AI recipes + parsing  
+- `ai/` → AI recipes + parsing
+
+The diagrams below show how the MindMama system is structured and how meals flow through the app:
+
+<img width="1347" height="670" alt="image" src="https://github.com/user-attachments/assets/97359d7c-d5f9-409d-9f34-bf1bd5cec9eb" />
+
+Below is an overview of the flow:
+
+<img width="668" height="719" alt="MindmMama (meal-prep-module-flow-chart) v2" src="https://github.com/user-attachments/assets/5e4a6fd4-efd5-40ed-95b4-2c9848d9e162" />
+
 
 ---
 
