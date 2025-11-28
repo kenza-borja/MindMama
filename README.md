@@ -10,6 +10,128 @@ This repo contains three services:
 
 ---
 
+##  Project Structure
+
+```
+MindMama/
+├── .env.example              # Example environment variables for root services
+├── .gitignore
+├── API_GUIDE.md              # API usage and integration guide
+├── README.md                 # Project documentation (this file)
+├── requirements.txt          # Python dependencies for AI service
+├── package.json              # Root dependencies / scripts (monorepo helper)
+├── package-lock.json
+
+├── ai/                       # AI microservice (Python)
+│   ├── Data/                 # AI data assets
+│   │   ├── DummyIngredientData.csv
+│   │   ├── IngredientCanonicalMap.json
+│   │   └── UnitNormalizationMap.json
+│   ├── __init__.py
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── config.py         # Config for AI app (env, constants)
+│   │   ├── main.py           # Entry point (API server)
+│   │   ├── models.py         # Data models / schemas
+│   │   └── prompts.py        # LLM prompt templates
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── llm_client.py     # Wrapper around LLM provider
+│   │   └── utils.py          # Helpers for parsing, normalization, etc.
+│   └── tests/
+│       ├── test_api.py       # API contract tests
+│       └── test_connection.py# Connectivity / health tests
+
+├── backend/                  # Orchestrator & REST API (Node.js)
+│   ├── .env.example          # Example backend environment variables
+│   ├── package.json
+│   └── src/
+│       ├── app.js            # Express app setup
+│       ├── index.js          # Backend entry point
+│       ├── api/
+│       │   ├── controllers/  # Route controllers (business logic endpoints)
+│       │   │   ├── plans.controller.js
+│       │   │   ├── recipes.controller.js
+│       │   │   ├── shopping-list.controller.js
+│       │   │   └── today.controller.js
+│       │   ├── middlewares/
+│       │   │   └── error.middleware.js
+│       │   └── routes/       # Route definitions / HTTP wiring
+│       │       ├── plans.routes.js
+│       │       ├── recipes.routes.js
+│       │       ├── shopping-list.routes.js
+│       │       └── today.routes.js
+│       ├── config/
+│       │   ├── env.js        # Env loader
+│       │   ├── firebase.js   # Firebase config / client
+│       │   └── orchestrator.js# AI orchestrator & prompt builder
+│       ├── db/
+│       │   ├── plans.db.js   # Plans persistence layer
+│       │   └── recipes.db.js # Recipes persistence layer
+│       └── services/         # Domain services used by controllers
+│           ├── meal-planner.service.js
+│           ├── recipe.service.js
+│           ├── shopping-list.service.js
+│           └── today.service.js
+
+├── frontend/                 # Mobile app (React Native / Expo)
+│   ├── .gitignore
+│   ├── App.tsx               # Root app component
+│   ├── app.json              # Expo app configuration
+│   ├── babel.config.js
+│   ├── components.json
+│   ├── global.css            # Global styles
+│   ├── index.ts              # Entry point / root registration
+│   ├── nativewind-env.d.ts
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tailwind.config.js    # Tailwind / NativeWind config
+│   ├── tsconfig.json
+│   ├── assets/               # Static assets (icons, logo, splash)
+│   │   ├── adaptive-icon.png
+│   │   ├── favicon.png
+│   │   ├── icon.png
+│   │   ├── logo.png
+│   │   └── splash-icon.png
+│   ├── components/           # Reusable UI components
+│   │   ├── MealCard.tsx
+│   │   ├── PillButton.tsx
+│   │   ├── RecipeCard.tsx
+│   │   ├── index.ts
+│   │   └── shared/
+│   │       └── CustomTabBar.tsx
+│   ├── lib/                  # Client-side utilities & API layer
+│   │   ├── api.ts            # HTTP client & API wrappers
+│   │   └── utils.ts          # Helpers (formatters, mappers, etc.)
+│   ├── navigation/           # Navigation configuration
+│   │   └── index.tsx
+│   ├── screens/              # App screens / routes
+│   │   ├── AIGenerateScreen.tsx
+│   │   ├── AISuggestionScreen.tsx
+│   │   ├── CreatePlanScreen.tsx
+│   │   ├── CreateRecipeScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── LaunchScreen.tsx
+│   │   ├── MealPlanScreen.tsx
+│   │   ├── RecipesLibraryScreen.tsx
+│   │   ├── ShoppingListScreen.tsx.tsx  # (typo in filename; consider renaming)
+│   │   └── ViewRecipeScreen.tsx
+│   ├── theme/
+│   │   └── colors.ts         # Centralized color palette
+│   └── types/
+│       └── navigation.ts     # Typed navigation definitions
+
+├── data/                     # Shared data assets (non-AI specific)
+│   ├── IngredientCanonicalMap.json
+│   └── UnitNormalizationMap.json
+
+└── docs/                     # Additional documentation
+    └── api.md                # Detailed API documentation
+
+```
+
+---
+
 ## Quick Start
 
 ### 1. Clone
@@ -333,7 +455,16 @@ We follow clean separation:
 - `controllers` → HTTP I/O  
 - `services` → business logic  
 - `db` → Firestore layer  
-- `ai/` → AI recipes + parsing  
+- `ai/` → AI recipes + parsing
+
+The diagrams below show how the MindMama system is structured and how meals flow through the app:
+
+<img width="1347" height="670" alt="image" src="https://github.com/user-attachments/assets/97359d7c-d5f9-409d-9f34-bf1bd5cec9eb" />
+
+Below is an overview of the flow:
+
+<img width="668" height="719" alt="MindmMama (meal-prep-module-flow-chart) v2" src="https://github.com/user-attachments/assets/5e4a6fd4-efd5-40ed-95b4-2c9848d9e162" />
+
 
 ---
 
