@@ -67,7 +67,7 @@ POST http://localhost:8000/ai/suggest-meal
 
 ---
 
-# ⚙️ Environment Variables
+# Environment Variables
 
 We never commit `.env` files.
 Templates are provided below.
@@ -216,7 +216,7 @@ Generates merged ingredient list from recipes.
 
 ---
 
-# 🛠 Architecture
+# Architecture
 
 We follow clean separation:
 
@@ -227,7 +227,7 @@ We follow clean separation:
 
 ---
 
-# 🤖 Commands
+# Commands
 
 ### Backend
 
@@ -260,7 +260,7 @@ npm run start
 
 ---
 
-# 🧭 Roadmap
+# Roadmap
 
 - User authentication
 - Cloud deployment
