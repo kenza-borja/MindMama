@@ -1,5 +1,4 @@
-const API_BASE_URL = "http://localhost:4000";
-
+const API_BASE_URL = "http://192.168.1.136:4000";
 type PlanPayload = {
   startDate: string;
   days: { date: string; meals: string[] }[];
@@ -11,6 +10,14 @@ type AddMealPayload = {
   recipeId?: string;
   preferences?: any;
 };
+
+export type Recipe = {
+  id: string;
+  title: string;
+  ingredients: string[];
+  instructions: string;
+};
+
 
 async function handleResponse(res: Response) {
   if (!res.ok) {

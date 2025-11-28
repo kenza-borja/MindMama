@@ -6,7 +6,7 @@ pydantic-settings==2.5.2
 
 # --- LLM Providers ---
 # OpenAI-compatible client (Groq also uses this)
-openai==1.51.0
+# openai==1.51.0
 
 # Groq official Python SDK
 groq==0.11.0

@@ -1,10 +1,17 @@
 export type RootTabParamList = {
-  Home: undefined;
-  Favorites: undefined;
-  CreateMeal: undefined; // The FAB screen target (MealPrepSetupScreen)
-  Search: undefined;
-  Profile: undefined;
-
+  // Home: undefined;
+  // Favorites: undefined;
+  // CreateMeal: undefined; // The FAB screen target (MealPrepSetupScreen)
+  // Search: undefined;
+  // Profile: undefined;
+  Home: { refresh?: boolean } | undefined;
+  AIGenerate: { planId: string; date: string; label: string };
+  AISuggestion: {
+    plan: any;
+    planId: string;
+    date: string;
+    label: string;
+  };
   
   SelectRecipes: {
     numberOfDays: number;
