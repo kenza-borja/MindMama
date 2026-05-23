@@ -57,6 +57,18 @@ export async function getPlan(planId: string) {
   return handleResponse(res);
 }
 
+export async function mergePlanDays(
+  planId: string,
+  days: { date: string; meals: string[] }[]
+) {
+  const res = await fetch(`${API_BASE_URL}/plans/${planId}/days`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ days }),
+  });
+  return handleResponse(res);
+}
+
 export async function addSavedMealToPlan(planId: string, payload: AddMealPayload) {
   const res = await fetch(`${API_BASE_URL}/plans/${planId}/meals/saved`, {
     method: "POST",

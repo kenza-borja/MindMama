@@ -10,6 +10,10 @@ export async function getPlan(planId) {
   return plansDb.getPlan(planId);
 }
 
+export async function mergeDays(planId, days) {
+  return plansDb.mergeDays(planId, days);
+}
+
 export async function addMealFromSaved({ planId, date, label, recipeId }) {
   return plansDb.addMeal(planId, date, { label, recipeId });
 }

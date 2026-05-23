@@ -154,14 +154,14 @@ export async function generateShoppingList(planId) {
     }
   }
 
-  // 5) Return aggregated list — use the most-seen line as the display label
+  // 5) Return aggregated list
   const items = Array.from(itemsByName.values()).map(({ name, category, lines }) => ({
     name,
     category,
-    quantity: lines.length > 1 ? lines.length : undefined,
-    unit: undefined,
     lines,
   }));
+
+  console.log(`[shoppingList] ${items.length} items, categories: ${JSON.stringify([...new Set(items.map(i => i.category))])}`);
 
   return { planId, items };
 }

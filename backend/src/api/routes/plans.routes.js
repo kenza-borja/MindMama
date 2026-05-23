@@ -8,5 +8,6 @@ router.get("/:id", plans.getPlan);
 
 router.post("/:id/meals/saved", plans.addMealFromSaved);
 router.post("/:id/meals/ai", plans.addMealFromAi);
+router.patch("/:id/days", plans.mergeDays);
 
 export default router;

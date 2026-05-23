@@ -12,7 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createPlan } from "../lib/api";
+import { createPlan, mergePlanDays } from "../lib/api";
 
 const DAYS = [
   "Monday",
@@ -66,18 +66,22 @@ export default function CreatePlanScreen() {
     try {
       setLoading(true);
 
-      // Reuse the existing plan if one exists — never wipe data on edit
+      const newDays = selectedDays.map((d) => ({
+        date: d,
+        meals: selectedMealTypes,
+      }));
+
       let planId: string | null = await AsyncStorage.getItem("currentPlanId");
 
       if (!planId) {
+        // First time — create the plan
         const startDate = new Date().toISOString().slice(0, 10);
-        const days = selectedDays.map((d) => ({
-          date: d,
-          meals: selectedMealTypes,
-        }));
-        const plan = await createPlan({ startDate, days });
+        const plan = await createPlan({ startDate, days: newDays });
         planId = plan.id;
         await AsyncStorage.setItem("currentPlanId", planId);
+      } else {
+        // Existing plan — add any newly selected days without touching existing data
+        await mergePlanDays(planId, newDays);
       }
 
       const firstDay = selectedDays[0];

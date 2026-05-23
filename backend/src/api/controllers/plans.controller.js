@@ -41,3 +41,12 @@ export async function addMealFromAi(req, res, next) {
     next(err);
   }
 }
+
+export async function mergeDays(req, res, next) {
+  try {
+    const result = await mealPlanner.mergeDays(req.params.id, req.body.days || []);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}

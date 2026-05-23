@@ -22,6 +22,24 @@ export async function updatePlan(id, data) {
   return getPlan(id);
 }
 
+export async function mergeDays(planId, newDays) {
+  const db = getDb();
+  const planSnap = await db.collection(COLLECTION).doc(planId).get();
+  if (!planSnap.exists) throw new Error("Plan not found");
+
+  const plan = planSnap.data();
+  const existing = plan.days || [];
+  const existingDates = new Set(existing.map(d => d.date));
+
+  const toAdd = newDays.filter(d => !existingDates.has(d.date));
+  if (toAdd.length === 0) return getPlan(planId);
+
+  await db.collection(COLLECTION).doc(planId).update({
+    days: [...existing, ...toAdd],
+  });
+  return getPlan(planId);
+}
+
 export async function addMeal(planId, date, mealObj) {
   const db = getDb();
   const planSnap = await db.collection(COLLECTION).doc(planId).get();
