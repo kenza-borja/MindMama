@@ -95,9 +95,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Sara&apos;s Kitchen</Text>
+        <Text style={styles.title}>Sara's Kitchen</Text>
         <Text style={styles.subtitle}>
-          It&apos;s a beautiful day to cook something good!
+          It's a beautiful day to cook something good!
         </Text>
 
         <View style={styles.divider} />
@@ -112,38 +112,30 @@ export default function HomeScreen() {
           </Text>
         ) : (
           plan.days.map((day: any, i: number) => {
-            const visibleMeals = (day.meals || []).filter(
-              (m: any) => m.recipeId
+            const allMeals: any[] = (day.meals || []).map((m: any) =>
+              typeof m === "string" ? { label: m } : m
             );
 
-            if (visibleMeals.length === 0) {
-              return (
-                <View key={i} style={styles.mealCard}>
-                  <Text style={styles.mealCardHeader}>{day.date}</Text>
-                  <View style={styles.mealInnerCard}>
-                    <Text style={styles.mealRecipeTitle}>
-                      No AI meals yet for this day.
-                    </Text>
-                  </View>
-                </View>
-              );
-            }
-
-            return visibleMeals.map((meal: any, j: number) => {
-              const recipe = recipes.find((r) => r.id === meal.recipeId);
-              const recipeTitle = recipe?.title || "AI Meal";
-
-              return (
-                <View key={`${i}-${j}`} style={styles.mealCard}>
-                  <Text style={styles.mealCardHeader}>
-                    {day.date}&apos;s {meal.label} Plan
-                  </Text>
-                  <View style={styles.mealInnerCard}>
-                    <Text style={styles.mealRecipeTitle}>{recipeTitle}</Text>
-                  </View>
-                </View>
-              );
-            });
+            return (
+              <View key={i} style={styles.mealCard}>
+                <Text style={styles.mealCardHeader}>{day.date}</Text>
+                {allMeals.map((meal: any, j: number) => {
+                  const recipe = meal.recipeId
+                    ? recipes.find((r) => r.id === meal.recipeId)
+                    : null;
+                  return (
+                    <View key={j} style={[styles.mealRow, j > 0 && styles.mealRowBorder]}>
+                      <View style={styles.mealLabelPill}>
+                        <Text style={styles.mealLabelText}>{meal.label}</Text>
+                      </View>
+                      <Text style={styles.mealRecipeTitle} numberOfLines={1}>
+                        {recipe ? recipe.title : "—"}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            );
           })
         )}
 
@@ -204,11 +196,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   mealCard: {
-    padding: 14,
     backgroundColor: COLORS.cardBg,
     borderRadius: 12,
     marginBottom: 10,
     marginTop: 4,
+    overflow: "hidden",
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -218,21 +210,44 @@ const styles = StyleSheet.create({
   mealCardHeader: {
     fontFamily: "Roboto_700Bold",
     fontSize: 13,
-    color: COLORS.primary,
-    marginBottom: 8,
+    color: COLORS.white,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
-  mealInnerCard: {
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    backgroundColor: COLORS.white,
+  mealRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  mealRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: "#E8E0F5",
+  },
+  mealLabelPill: {
+    backgroundColor: COLORS.primary + "22",
+    borderRadius: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    minWidth: 70,
+    alignItems: "center",
+  },
+  mealLabelText: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 11,
+    color: COLORS.primary,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
   mealRecipeTitle: {
     fontFamily: "Roboto_400Regular",
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.text,
+    flex: 1,
   },
   primaryBtn: {
     marginTop: 24,

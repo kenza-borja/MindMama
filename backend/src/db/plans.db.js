@@ -29,22 +29,17 @@ export async function addMeal(planId, date, mealObj) {
   if (!planSnap.exists) throw new Error("Plan not found");
   const plan = planSnap.data();
 
-  plan.days = plan.days.map(day => {
-  if (day.date !== date) return day;
+  const updatedDays = plan.days.map(day => {
+    if (day.date !== date) return day;
 
-  const existingMeals = (day.meals || []).map(m =>
-    typeof m === "string" ? { label: m } : m
-  );
+    const existingMeals = (day.meals || []).map(m =>
+      typeof m === "string" ? { label: m } : m
+    );
+    const filtered = existingMeals.filter(m => m.label !== mealObj.label);
 
-  const filtered = existingMeals.filter(m => m.label !== mealObj.label);
+    return { ...day, meals: [...filtered, mealObj] };
+  });
 
-  return {
-    ...day,
-    meals: [...filtered, mealObj],
-  };
-});
-
-
-  await db.collection(COLLECTION).doc(planId).update({ days: plan.days });
-  return { id: planId, ...plan };
+  await db.collection(COLLECTION).doc(planId).update({ days: updatedDays });
+  return getPlan(planId);
 }

@@ -1,4 +1,3 @@
-// ShoppingListScreen.tsx
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -7,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import {
   useRoute,
@@ -27,7 +27,6 @@ type ShoppingListItem = {
   quantity?: number;
   unit?: string;
   category?: string;
-  // allow any extra fields from backend
   [key: string]: any;
 };
 
@@ -36,6 +35,7 @@ export default function ShoppingListScreen() {
   const nav = useNavigation<NavProp>();
 
   const [items, setItems] = useState<ShoppingListItem[]>([]);
+  const [checked, setChecked] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,11 +45,9 @@ export default function ShoppingListScreen() {
         try {
           setLoading(true);
           setError(null);
+          setChecked(new Set());
 
-          // 1) planId from navigation params, if passed
           let planId: string | null = route.params?.planId ?? null;
-
-          // 2) else from AsyncStorage (set in CreatePlan)
           if (!planId) {
             planId = await AsyncStorage.getItem("currentPlanId");
           }
@@ -63,15 +61,11 @@ export default function ShoppingListScreen() {
 
           const result = await getShoppingList(planId);
 
-          // Support either array or { items: [...] }
           let parsed: ShoppingListItem[] = [];
           if (Array.isArray(result)) {
             parsed = result;
           } else if (Array.isArray(result?.items)) {
             parsed = result.items;
-          } else {
-            // last resort – unknown structure
-            parsed = [];
           }
 
           setItems(parsed);
@@ -88,9 +82,13 @@ export default function ShoppingListScreen() {
     }, [route.params?.planId])
   );
 
-  const handleBackHome = () => {
-    nav.navigate("Home");
-  };
+  function toggleCheck(idx: number) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+  }
 
   if (loading) {
     return (
@@ -103,54 +101,86 @@ export default function ShoppingListScreen() {
     );
   }
 
+  // Group by category
+  const grouped: Record<string, { item: ShoppingListItem; idx: number }[]> = {};
+  items.forEach((item, idx) => {
+    const cat = item.category?.trim() || "Other";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push({ item, idx });
+  });
+  const categories = Object.keys(grouped).sort((a, b) =>
+    a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)
+  );
+
+  const checkedCount = checked.size;
+  const totalCount = items.length;
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Sara&apos;s Kitchen</Text>
-        <Text style={styles.subtitle}>Your Shopping List</Text>
+        <Text style={styles.title}>Shopping List</Text>
+
+        {totalCount > 0 && (
+          <Text style={styles.progress}>
+            {checkedCount} of {totalCount} items picked
+          </Text>
+        )}
 
         {error && <Text style={styles.error}>{error}</Text>}
 
         {!error && items.length === 0 && (
           <Text style={styles.muted}>
-            No items yet. Create a meal plan and generate a shopping list.
+            No items yet. Create a meal plan to generate your list.
           </Text>
         )}
 
         {!error &&
-          items.length > 0 &&
-          items.map((item, idx) => {
-            const lineParts: string[] = [];
+          categories.map((cat) => (
+            <View key={cat} style={styles.categoryBlock}>
+              <Text style={styles.categoryHeader}>{cat.toUpperCase()}</Text>
+              {grouped[cat].map(({ item, idx }) => {
+                const isChecked = checked.has(idx);
+                const parts: string[] = [];
+                if (item.quantity) parts.push(String(item.quantity));
+                if (item.unit) parts.push(item.unit);
+                if (item.name) parts.push(item.name);
+                const label =
+                  parts.length > 0 ? parts.join(" ") : JSON.stringify(item);
 
-            if (item.quantity) {
-              lineParts.push(String(item.quantity));
-            }
-            if (item.unit) {
-              lineParts.push(item.unit);
-            }
-            if (item.name) {
-              lineParts.push(item.name);
-            }
+                return (
+                  <Pressable
+                    key={idx}
+                    style={styles.itemRow}
+                    onPress={() => toggleCheck(idx)}
+                  >
+                    <View
+                      style={[
+                        styles.checkbox,
+                        isChecked && styles.checkboxChecked,
+                      ]}
+                    >
+                      {isChecked && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.itemText,
+                        isChecked && styles.itemTextDone,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
 
-            const line =
-              lineParts.length > 0
-                ? lineParts.join(" ")
-                : JSON.stringify(item);
-
-            return (
-              <View key={idx} style={styles.itemRow}>
-                <Text style={styles.bullet}>•</Text>
-                <View>
-                  <Text style={styles.itemText}>{line}</Text>
-                  {item.category && (
-                    <Text style={styles.itemCategory}>{item.category}</Text>
-                  )}
-                </View>
-              </View>
-            );
-          })}
-
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleBackHome}>
+        <TouchableOpacity
+          style={styles.primaryBtn}
+          onPress={() => nav.navigate("Home")}
+        >
           <Text style={styles.primaryBtnText}>Back to Meal Plan</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -159,149 +189,87 @@ export default function ShoppingListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
-  scrollContent: {
-    paddingBottom: 32,
-  },
+  container: { flex: 1, backgroundColor: COLORS.white },
+  scrollContent: { padding: 18, paddingBottom: 40 },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    padding: 18,
   },
-  title: { fontFamily: "Roboto_700Bold", fontSize: 30, marginBottom: 8 },
-  subtitle: {
+  title: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 26,
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  progress: {
     fontFamily: "Roboto_400Regular",
-    fontSize: 20,
-    marginBottom: 16,
+    fontSize: 13,
     color: COLORS.muted,
+    marginBottom: 20,
   },
-  muted: {
-    fontFamily: "Roboto_400Regular",
-    color: COLORS.muted,
-    marginTop: 4,
-  },
+  muted: { fontFamily: "Roboto_400Regular", color: COLORS.muted, marginTop: 4 },
   error: {
     fontFamily: "Roboto_400Regular",
     color: "red",
     marginBottom: 8,
   },
+  categoryBlock: {
+    marginBottom: 20,
+  },
+  categoryHeader: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 11,
+    color: COLORS.primary,
+    letterSpacing: 1.2,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS.primary + "33",
+  },
   itemRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginTop: 8,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0EBF8",
+    gap: 12,
   },
-  bullet: {
-    fontSize: 16,
-    marginRight: 6,
-    marginTop: 2,
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  checkmark: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontFamily: "Roboto_700Bold",
   },
   itemText: {
     fontFamily: "Roboto_400Regular",
-    fontSize: 14,
+    fontSize: 15,
+    color: COLORS.text,
+    flex: 1,
   },
-  itemCategory: {
-    fontFamily: "Roboto_400Regular",
-    fontSize: 12,
+  itemTextDone: {
+    textDecorationLine: "line-through",
     color: COLORS.muted,
   },
   primaryBtn: {
-    marginTop: 24,
+    marginTop: 8,
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
   },
-  primaryBtnText: {
-    color: COLORS.white,
-    fontFamily: "Roboto_700Bold",
-  },
+  primaryBtnText: { color: COLORS.white, fontFamily: "Roboto_700Bold" },
 });
-
-
-// import React, { useEffect, useState } from "react";
-// import { View, Text, FlatList, StyleSheet, ScrollView, TouchableOpacity, } from "react-native";
-// import { getShoppingList } from "../lib/api";
-// import { COLORS } from "../theme/colors";
-// import { SafeAreaView } from "react-native-safe-area-context";
-// import { Ionicons } from '@expo/vector-icons';
-
-// interface ShoppingListScreenProps {
-//   navigation: any;
-//   route: any;
-// }
-// const ShoppingListScreen: React.FC<ShoppingListScreenProps> = ({ navigation, route }) => {
-//   const [items, setItems] = useState<any[]>([]);
-
-//   useEffect(() => {
-//     // For demo, pass a planId if you have one; otherwise this will error if API offline
-//     getShoppingList("demo-plan-id")
-//       .then((data) => setItems(data.items || []))
-//       .catch(() => {
-//         // fallback demo data
-//         setItems(["Milk", "Chicken", "Olives"]);
-//       });
-//   }, []);
-
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       {/* Header */}
-//       <View style={styles.header}>
-//       <TouchableOpacity 
-//           style={styles.backButton} 
-//           onPress={() => navigation.navigate('Home')}
-//         >
-//           <Ionicons name="chevron-back" size={28} color="#111827" />
-//         </TouchableOpacity>
-        
-//         <View style={styles.titleContainer}>
-//           <Text style={styles.titleText}>Sara's kitchen</Text>
-//           <Ionicons name="restaurant-outline" size={24} color="#111827" />
-//         </View>
-        
-//         <View style={styles.headerRight} />
-//       </View>
-//       <View >
-//       <Text style={styles.title}>This is your shopping list!</Text>
-
-//       <FlatList data={items} keyExtractor={(i, idx) => String(idx)} renderItem={({ item }) => <Text style={styles.item}>• {item}</Text>} />
-//     </View>
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//    header: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     paddingHorizontal: 16,
-//     paddingTop: 8,
-//     paddingBottom: 16,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#F3F4F6',
-//   },
-//   backButton: {
-//     width: 40,
-//     height: 40,
-//     justifyContent: 'center',
-//     alignItems: 'flex-start',
-//   },
-//   titleContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 6,
-//   },
-//   titleText: {
-//     fontSize: 20,
-//     fontWeight: '600',
-//     color: '#111827',
-//   },
-//   headerRight: {
-//     width: 40,
-//   },
-//   container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
-//   title: { fontFamily: "Roboto_700Bold", fontSize: 22, marginBottom: 12 },
-//   item: { fontFamily: "Roboto_400Regular", marginVertical: 4 },
-// });
-
-// export default ShoppingListScreen;
