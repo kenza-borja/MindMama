@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, CommonActions } from "@react-navigation/native";
 import { COLORS } from "../theme/colors";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation";
@@ -100,7 +100,13 @@ export default function AISuggestionScreen() {
         slotIndex: currentIndex + 1,
       });
     } else {
-      nav.navigate("Home" as any, { planId });
+      // Reset the whole stack to Home so it re-fetches fresh with the correct planId
+      nav.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "Home" as any, params: { planId } }],
+        })
+      );
     }
   }
 

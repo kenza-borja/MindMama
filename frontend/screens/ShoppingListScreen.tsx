@@ -108,9 +108,18 @@ export default function ShoppingListScreen() {
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push({ item, idx });
   });
-  const categories = Object.keys(grouped).sort((a, b) =>
-    a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)
-  );
+  const CATEGORY_ORDER = [
+    "Meat & Poultry", "Fish & Seafood", "Vegetables", "Fruit",
+    "Dairy & Eggs", "Grains & Carbs", "Legumes", "Spices & Herbs", "Pantry", "Other",
+  ];
+  const categories = Object.keys(grouped).sort((a, b) => {
+    const ia = CATEGORY_ORDER.indexOf(a);
+    const ib = CATEGORY_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
 
   const checkedCount = checked.size;
   const totalCount = items.length;
@@ -140,12 +149,11 @@ export default function ShoppingListScreen() {
               <Text style={styles.categoryHeader}>{cat.toUpperCase()}</Text>
               {grouped[cat].map(({ item, idx }) => {
                 const isChecked = checked.has(idx);
-                const parts: string[] = [];
-                if (item.quantity) parts.push(String(item.quantity));
-                if (item.unit) parts.push(item.unit);
-                if (item.name) parts.push(item.name);
-                const label =
-                  parts.length > 0 ? parts.join(" ") : JSON.stringify(item);
+                // Use the first raw ingredient line if available, else name
+                const label: string =
+                  (Array.isArray(item.lines) && item.lines[0]) ||
+                  item.name ||
+                  JSON.stringify(item);
 
                 return (
                   <Pressable

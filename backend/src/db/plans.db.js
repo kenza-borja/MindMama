@@ -29,7 +29,9 @@ export async function addMeal(planId, date, mealObj) {
   if (!planSnap.exists) throw new Error("Plan not found");
   const plan = planSnap.data();
 
-  const updatedDays = plan.days.map(day => {
+  console.log(`[addMeal] id=${planId} date="${date}" label="${mealObj.label}" days_before=${JSON.stringify(plan.days?.map(d => ({ date: d.date, meals: d.meals?.length })))}`);
+
+  const updatedDays = (plan.days || []).map(day => {
     if (day.date !== date) return day;
 
     const existingMeals = (day.meals || []).map(m =>
@@ -39,6 +41,8 @@ export async function addMeal(planId, date, mealObj) {
 
     return { ...day, meals: [...filtered, mealObj] };
   });
+
+  console.log(`[addMeal] days_after=${JSON.stringify(updatedDays.map(d => ({ date: d.date, meals: d.meals?.length })))}`);
 
   await db.collection(COLLECTION).doc(planId).update({ days: updatedDays });
   return getPlan(planId);
