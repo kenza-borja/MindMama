@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../theme/colors";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -65,15 +66,19 @@ export default function CreatePlanScreen() {
     try {
       setLoading(true);
 
-      const startDate = new Date().toISOString().slice(0, 10);
+      // Reuse the existing plan if one exists — never wipe data on edit
+      let planId: string | null = await AsyncStorage.getItem("currentPlanId");
 
-      const days = selectedDays.map((d) => ({
-        date: d,
-        meals: selectedMealTypes,
-      }));
-
-      const plan = await createPlan({ startDate, days });
-      const planId: string = plan.id;
+      if (!planId) {
+        const startDate = new Date().toISOString().slice(0, 10);
+        const days = selectedDays.map((d) => ({
+          date: d,
+          meals: selectedMealTypes,
+        }));
+        const plan = await createPlan({ startDate, days });
+        planId = plan.id;
+        await AsyncStorage.setItem("currentPlanId", planId);
+      }
 
       const firstDay = selectedDays[0];
       const firstMeal = selectedMealTypes[0];

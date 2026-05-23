@@ -146,7 +146,10 @@ export default function ShoppingListScreen() {
         {!error &&
           categories.map((cat) => (
             <View key={cat} style={styles.categoryBlock}>
-              <Text style={styles.categoryHeader}>{cat.toUpperCase()}</Text>
+              <View style={styles.categoryHeaderRow}>
+                <Text style={styles.categoryHeader}>{cat}</Text>
+                <Text style={styles.categoryCount}>{grouped[cat].length}</Text>
+              </View>
               {grouped[cat].map(({ item, idx }) => {
                 const isChecked = checked.has(idx);
                 // Use the first raw ingredient line if available, else name
@@ -224,25 +227,44 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   categoryBlock: {
-    marginBottom: 20,
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: COLORS.cardBg,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  categoryHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
   },
   categoryHeader: {
     fontFamily: "Roboto_700Bold",
-    fontSize: 11,
-    color: COLORS.primary,
-    letterSpacing: 1.2,
-    marginBottom: 8,
-    paddingBottom: 4,
-    borderBottomWidth: 1.5,
-    borderBottomColor: COLORS.primary + "33",
+    fontSize: 13,
+    color: COLORS.white,
+    letterSpacing: 0.4,
+  },
+  categoryCount: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 12,
+    color: COLORS.white + "BB",
   },
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0EBF8",
+    borderBottomColor: "#EDE7F6",
     gap: 12,
+    backgroundColor: COLORS.white,
   },
   checkbox: {
     width: 22,
