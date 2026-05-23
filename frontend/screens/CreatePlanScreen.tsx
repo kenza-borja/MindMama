@@ -65,24 +65,16 @@ export default function CreatePlanScreen() {
     try {
       setLoading(true);
 
-      // For now, use today's date as the plan start date
       const startDate = new Date().toISOString().slice(0, 10);
 
-      // Build days structure for backend
       const days = selectedDays.map((d) => ({
-        date: d, // could be real dates later
+        date: d,
         meals: selectedMealTypes,
       }));
 
-      // Create the plan in the backend
-      const plan = await createPlan({
-        startDate,
-        days,
-      });
+      const plan = await createPlan({ startDate, days });
+      const planId: string = plan.id;
 
-      const planId = plan.id;
-
-      // For now, use the first selected slot for AI flow
       const firstDay = selectedDays[0];
       const firstMeal = selectedMealTypes[0];
 
@@ -91,18 +83,20 @@ export default function CreatePlanScreen() {
           planId,
           date: firstDay,
           label: firstMeal,
+          selectedDays,
+          selectedMealTypes,
+          slotIndex: 0,
         });
       } else if (selectedRecipeSource === "New Recipe") {
-        // You could also pass planId here if you later want to attach manual recipes
         nav.navigate("CreateRecipe");
       } else if (selectedRecipeSource === "Saved") {
         nav.navigate("MealPlan", {
           numberOfDays: selectedDays.length,
-          selectedDays: selectedDays,
+          selectedDays,
+          selectedMealTypes,
           selectedRecipeOption: selectedRecipeSource,
-          // you can add planId here too if needed:
           planId,
-        } as any);
+        });
       }
     } catch (err: any) {
       console.error(err);
@@ -235,7 +229,6 @@ const styles = StyleSheet.create({
   },
 });
 
-
 // import React, { useState } from "react";
 // import {
 //   View,
@@ -289,15 +282,15 @@ const styles = StyleSheet.create({
 
 //     if (selectedRecipeSource === "Suggestion from AI") {
 //       nav.navigate("AIGenerate", {
-//         planId: "1", 
-//         date: selectedDays[0], 
+//         planId: "1",
+//         date: selectedDays[0],
 //         label: selectedMealTypes[0],
 //       });
 //     } else if (selectedRecipeSource === "New Recipe") {
 //       nav.navigate("CreateRecipe");
 //     } else if (selectedRecipeSource === "Saved") {
 // nav.navigate("MealPlan", {
-//         numberOfDays: selectedDays.length, 
+//         numberOfDays: selectedDays.length,
 //         selectedDays: selectedDays,
 //         selectedRecipeOption: selectedRecipeSource,
 //     });    }

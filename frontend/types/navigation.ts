@@ -1,10 +1,6 @@
-export type RootTabParamList = {
-  // Home: undefined;
-  // Favorites: undefined;
-  // CreateMeal: undefined; // The FAB screen target (MealPrepSetupScreen)
-  // Search: undefined;
-  // Profile: undefined;
-  Home: { refresh?: boolean } | undefined;
+export type RootStackParamList = {
+  Home: { refresh?: boolean; planId?: string } | undefined;
+  CreatePlan: undefined;
   AIGenerate: { planId: string; date: string; label: string };
   AISuggestion: {
     plan: any;
@@ -12,7 +8,6 @@ export type RootTabParamList = {
     date: string;
     label: string;
   };
-  
   SelectRecipes: {
     numberOfDays: number;
     selectedDays: string[];
@@ -22,16 +17,16 @@ export type RootTabParamList = {
     category: string;
     day?: string;
     returnTo?: string;
-  }; // Screen for Image 1 ("Lunch" screen), takes a 'category' parameter
+  };
   MealPlan: {
     numberOfDays: number;
     selectedDays: string[];
     selectedRecipeOption?: string;
     selectedRecipes: any[];
-    planId?: string; 
-  }; // Meal plan screen
-
-  AIChat: undefined; // New screen for AI chat interactions
+    planId?: string;
+  };
+  AIChat: undefined;
+  ShoppingList: { planId?: string } | undefined;
 };
 
 

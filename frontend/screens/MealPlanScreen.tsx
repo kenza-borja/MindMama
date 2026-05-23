@@ -1,160 +1,102 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
-  Image,
+  ActivityIndicator,
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RootStackParamList } from "../navigation";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { listRecipes, addSavedMealToPlan, type Recipe } from "../lib/api";
+import { COLORS } from "../theme/colors";
 
-type MealPlanScreenProps = NativeStackScreenProps<RootStackParamList, "MealPlan">;
-interface Recipe {
-  id: string;
-  title: string;
-  time: string;
-  imageUrl?: string;
-  added: boolean;
-}
-
-// Mock data
-const recipesData = {
-  Breakfast: [
-    {
-      id: "1",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "2",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "3",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-  ],
-  Lunch: [
-    {
-      id: "4",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "5",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "6",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-  ],
-  Dinner: [
-    {
-      id: "7",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "8",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-  ],
-  Desserts: [
-    {
-      id: "7",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "8",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-  ],
-  Snacks: [
-    {
-      id: "7",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-    {
-      id: "8",
-      title: "Lorem ipsum dolor sit amet",
-      time: "30-45 minutes",
-      added: false,
-    },
-  ],
-};
+type Props = NativeStackScreenProps<RootStackParamList, "MealPlan">;
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - 48) / 2; // 2 cards per row with padding
+const CARD_WIDTH = (width - 48) / 2;
 
-export default function MealPlanScreen( { navigation, route }: MealPlanScreenProps) {
-   type NavProp = NativeStackNavigationProp<RootStackParamList, "MealPlan">;
-   const nav = useNavigation<NavProp>();
-   
-  const {
-    numberOfDays = 2,
-    selectedDays = [],
-    selectedRecipeOption = "New recipe",
-  } = route.params;
-  const [recipes, setRecipes] = useState(recipesData);
+export default function MealPlanScreen({ navigation, route }: Props) {
+  const { planId, selectedDays, selectedMealTypes } = route.params;
 
-  const handleAddRecipe = (category: string, recipeId: string) => {
-    setRecipes((prev) => ({
-      ...prev,
-      [category]: prev[category as keyof typeof prev].map((recipe) =>
-        recipe.id === recipeId ? { ...recipe, added: !recipe.added } : recipe
-      ),
-    }));
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listRecipes()
+      .then((data) => setRecipes(data || []))
+      .catch(() => setError("Failed to load recipes."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggleRecipe = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
-  const handleSeeAll = (category: string) => {
-    navigation.navigate("ViewRecipe", { category });
+  const handleNext = async () => {
+    if (selectedIds.size === 0) {
+      alert("Please select at least one recipe.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const selected = recipes.filter((r) => selectedIds.has(r.id));
+
+      // Build every day × meal slot
+      const slots: { date: string; label: string }[] = [];
+      for (const date of selectedDays) {
+        for (const label of selectedMealTypes) {
+          slots.push({ date, label });
+        }
+      }
+
+      // Assign recipes to slots — cycle if fewer recipes than slots
+      await Promise.all(
+        slots.map((slot, i) =>
+          addSavedMealToPlan(planId, {
+            date: slot.date,
+            label: slot.label,
+            recipeId: selected[i % selected.length].id,
+          })
+        )
+      );
+
+      await AsyncStorage.setItem("currentPlanId", planId);
+      navigation.navigate("Home", { planId });
+    } catch (e: any) {
+      alert(e?.message || "Failed to save recipes to plan.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleNext = () => {
-    // Get all selected recipes
-    const allSelectedRecipes = Object.entries(recipes).flatMap(
-      ([category, recipeList]) =>
-        recipeList.filter((r) => r.added).map((r) => ({ ...r, category }))
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.center}>
+          <ActivityIndicator color={COLORS.primary} />
+          <Text style={styles.muted}>Loading your recipes...</Text>
+        </View>
+      </SafeAreaView>
     );
-
-    console.log("Selected recipes:", allSelectedRecipes);
-
-    navigation.navigate("ViewRecipe", { category: "Lunch" });
-
-    // Option 2: Navigate to next step instead
-    // navigation.navigate('NextStep', { selectedRecipes: allSelectedRecipes });
-  };
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -162,241 +104,77 @@ export default function MealPlanScreen( { navigation, route }: MealPlanScreenPro
         >
           <Ionicons name="chevron-back" size={28} color="#111827" />
         </TouchableOpacity>
-
         <View style={styles.titleContainer}>
           <Text style={styles.titleText}>Sara's kitchen</Text>
           <Ionicons name="restaurant-outline" size={24} color="#111827" />
         </View>
-
         <View style={styles.headerRight} />
       </View>
 
-      {/* Progress Indicator */}
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressBar, styles.progressActive]} />
-        <View style={[styles.progressBar, styles.progressActive]} />
-        <View style={styles.progressBar} />
-        <View style={styles.progressBar} />
-        <View style={styles.progressBar} />
-      </View>
-
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>Select recipes you want to add :</Text>
+        <Text style={styles.subtitle}>Select recipes to add to your plan:</Text>
 
-        {/* Breakfast Section */}
-        <View style={styles.categorySection}>
-          <View style={styles.categoryHeader}>
-            <Text style={styles.categoryTitle}>Breakfast</Text>
-            <TouchableOpacity onPress={() => handleSeeAll("Breakfast")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
+        {error && <Text style={styles.error}>{error}</Text>}
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recipesRow}
-          >
-            {recipes.Breakfast.map((recipe) => (
+        {!error && recipes.length === 0 && (
+          <Text style={styles.muted}>
+            No saved recipes yet. Create one first!
+          </Text>
+        )}
+
+        <View style={styles.grid}>
+          {recipes.map((recipe) => {
+            const added = selectedIds.has(recipe.id);
+            return (
               <View key={recipe.id} style={styles.recipeCard}>
                 <View style={styles.recipeImageContainer}>
                   <View style={styles.recipeImagePlaceholder} />
                   <TouchableOpacity
                     style={styles.addButton}
-                    onPress={() => handleAddRecipe("Breakfast", recipe.id)}
+                    onPress={() => toggleRecipe(recipe.id)}
                   >
                     <Ionicons
-                      name={recipe.added ? "checkmark" : "add"}
+                      name={added ? "checkmark" : "add"}
                       size={20}
-                      color={recipe.added ? "#10B981" : "#9CA3AF"}
+                      color={added ? "#10B981" : "#9CA3AF"}
                     />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.recipeTitle} numberOfLines={2}>
                   {recipe.title}
                 </Text>
-                <View style={styles.recipeTimeContainer}>
-                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.recipeTime}>{recipe.time}</Text>
-                </View>
+                {recipe.cook_time != null && (
+                  <View style={styles.recipeTimeContainer}>
+                    <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                    <Text style={styles.recipeTime}>{recipe.cook_time} min</Text>
+                  </View>
+                )}
               </View>
-            ))}
-          </ScrollView>
+            );
+          })}
         </View>
 
-        {/* Lunch Section */}
-        <View style={styles.categorySection}>
-          <View style={styles.categoryHeader}>
-            <Text style={styles.categoryTitle}>Lunch</Text>
-            <TouchableOpacity onPress={() => handleSeeAll("Lunch")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recipesRow}
-          >
-            {recipes.Lunch.map((recipe) => (
-              <View key={recipe.id} style={styles.recipeCard}>
-                <View style={styles.recipeImageContainer}>
-                  <View style={styles.recipeImagePlaceholder} />
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => handleAddRecipe("Lunch", recipe.id)}
-                  >
-                    <Ionicons
-                      name={recipe.added ? "checkmark" : "add"}
-                      size={20}
-                      color={recipe.added ? "#10B981" : "#9CA3AF"}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.recipeTitle} numberOfLines={2}>
-                  {recipe.title}
-                </Text>
-                <View style={styles.recipeTimeContainer}>
-                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.recipeTime}>{recipe.time}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Dinner Section */}
-        <View style={styles.categorySection}>
-          <View style={styles.categoryHeader}>
-            <Text style={styles.categoryTitle}>Dinner</Text>
-            <TouchableOpacity onPress={() => handleSeeAll("Dinner")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recipesRow}
-          >
-            {recipes.Dinner.map((recipe) => (
-              <View key={recipe.id} style={styles.recipeCard}>
-                <View style={styles.recipeImageContainer}>
-                  <View style={styles.recipeImagePlaceholder} />
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => handleAddRecipe("Dinner", recipe.id)}
-                  >
-                    <Ionicons
-                      name={recipe.added ? "checkmark" : "add"}
-                      size={20}
-                      color={recipe.added ? "#10B981" : "#9CA3AF"}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.recipeTitle} numberOfLines={2}>
-                  {recipe.title}
-                </Text>
-                <View style={styles.recipeTimeContainer}>
-                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.recipeTime}>{recipe.time}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Desserts Section */}
-        <View style={styles.categorySection}>
-          <View style={styles.categoryHeader}>
-            <Text style={styles.categoryTitle}>Desserts</Text>
-            <TouchableOpacity onPress={() => handleSeeAll("Desserts")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recipesRow}
-          >
-            {recipes.Dinner.map((recipe) => (
-              <View key={recipe.id} style={styles.recipeCard}>
-                <View style={styles.recipeImageContainer}>
-                  <View style={styles.recipeImagePlaceholder} />
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => handleAddRecipe("Desserts", recipe.id)}
-                  >
-                    <Ionicons
-                      name={recipe.added ? "checkmark" : "add"}
-                      size={20}
-                      color={recipe.added ? "#10B981" : "#9CA3AF"}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.recipeTitle} numberOfLines={2}>
-                  {recipe.title}
-                </Text>
-                <View style={styles.recipeTimeContainer}>
-                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.recipeTime}>{recipe.time}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Snacks Section */}
-        <View style={styles.categorySection}>
-          <View style={styles.categoryHeader}>
-            <Text style={styles.categoryTitle}>Snacks</Text>
-            <TouchableOpacity onPress={() => handleSeeAll("Snacks")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recipesRow}
-          >
-            {recipes.Dinner.map((recipe) => (
-              <View key={recipe.id} style={styles.recipeCard}>
-                <View style={styles.recipeImageContainer}>
-                  <View style={styles.recipeImagePlaceholder} />
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => handleAddRecipe("Snacks", recipe.id)}
-                  >
-                    <Ionicons
-                      name={recipe.added ? "checkmark" : "add"}
-                      size={20}
-                      color={recipe.added ? "#10B981" : "#9CA3AF"}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.recipeTitle} numberOfLines={2}>
-                  {recipe.title}
-                </Text>
-                <View style={styles.recipeTimeContainer}>
-                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.recipeTime}>{recipe.time}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Bottom spacing */}
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Next Button */}
       <View style={styles.nextButtonContainer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Next</Text>
+        <TouchableOpacity
+          style={[
+            styles.nextButton,
+            selectedIds.size > 0 && styles.nextButtonActive,
+          ]}
+          onPress={handleNext}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.nextButtonText}>
+              {selectedIds.size > 0
+                ? `Add ${selectedIds.size} recipe${selectedIds.size > 1 ? "s" : ""} to plan`
+                : "Select a recipe"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -404,12 +182,11 @@ export default function MealPlanScreen( { navigation, route }: MealPlanScreenPro
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+  safeArea: { flex: 1, backgroundColor: "#fff" },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
+  muted: { color: "#9CA3AF", fontFamily: "Roboto_400Regular" },
+  error: { color: "red", marginBottom: 8, fontFamily: "Roboto_400Regular" },
 
-  /** HEADER **/
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -426,82 +203,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-start",
   },
-  titleContainer: {
+  titleContainer: { flexDirection: "row", alignItems: "center", gap: 6 },
+  titleText: { fontSize: 20, fontWeight: "600", color: "#111827" },
+  headerRight: { width: 40 },
+
+  container: { flex: 1, paddingHorizontal: 16 },
+  subtitle: { fontSize: 14, color: "#111827", marginVertical: 20 },
+
+  grid: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+    flexWrap: "wrap",
+    gap: 12,
   },
-  titleText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  headerRight: {
-    width: 40,
-  },
-
-  /** PROGRESS BARS **/
-  progressContainer: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  progressBar: {
-    flex: 1,
-    height: 3,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 2,
-  },
-  progressActive: {
-    backgroundColor: "#6B7280",
-  },
-
-  /** BODY **/
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#111827",
-    marginBottom: 20,
-  },
-
-  /** CATEGORY SECTIONS **/
-  categorySection: {
-    marginBottom: 28,
-  },
-  categoryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  seeAllText: {
-    fontSize: 14,
-    color: "#6B7280",
-    fontWeight: "500",
-  },
-
-  /** RECIPES ROW **/
-  recipesRow: {
-    paddingRight: 16,
-  },
-  recipeCard: {
-    width: CARD_WIDTH,
-    marginRight: 12,
-  },
-  recipeImageContainer: {
-    position: "relative",
-    marginBottom: 10,
-  },
+  recipeCard: { width: CARD_WIDTH },
+  recipeImageContainer: { position: "relative", marginBottom: 10 },
   recipeImagePlaceholder: {
     width: "100%",
     height: 120,
@@ -531,20 +246,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     lineHeight: 18,
   },
-  recipeTimeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  recipeTime: {
-    fontSize: 12,
-    color: "#9CA3AF",
-  },
+  recipeTimeContainer: { flexDirection: "row", alignItems: "center", gap: 4 },
+  recipeTime: { fontSize: 12, color: "#9CA3AF" },
 
-  /** NEXT BUTTON **/
   nextButtonContainer: {
     position: "absolute",
-    bottom: 100,
+    bottom: 32,
     left: 16,
     right: 16,
   },
@@ -554,9 +261,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  nextButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  nextButtonActive: { backgroundColor: COLORS.primary },
+  nextButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

@@ -9,21 +9,23 @@ import RecipesLibraryScreen from "../screens/RecipesLibraryScreen";
 import ViewRecipeScreen from "../screens/ViewRecipeScreen";
 import MealPlanScreen from "screens/MealPlanScreen";
 import CreateRecipeScreen from "screens/CreateRecipeScreen";
-import ShoppingListScreen from "screens/ShoppingListScreen.tsx";
+import ShoppingListScreen from "screens/ShoppingListScreen";
 
 export type RootStackParamList = {
   Launch: undefined;
-  Home: undefined;
+  Home: { planId?: string } | undefined;
   CreatePlan: undefined;
-  AIGenerate: { planId?: string; date?: string; label?: string } | undefined;
-  AISuggestion: { aiResult?: any; planId?: string } | undefined;
+  AIGenerate: { planId?: string; date?: string; label?: string; selectedDays?: string[]; selectedMealTypes?: string[]; slotIndex?: number } | undefined;
+  AISuggestion: { aiResult?: any; planId?: string; plan?: any; date?: string; label?: string; selectedDays?: string[]; selectedMealTypes?: string[]; slotIndex?: number } | undefined;
   RecipesLibrary: { planId?: string } | undefined;
-  ViewRecipe: { category: string; recipe?: any; planId?: string } | undefined;
+  ViewRecipe: { category?: string; recipe?: any; planId?: string } | undefined;
   ShoppingList: { planId?: string } | undefined;
   MealPlan: {
     numberOfDays: number;
     selectedDays: string[];
+    selectedMealTypes: string[];
     selectedRecipeOption: string;
+    planId: string;
   };
   CreateRecipe: { planId?: string } | undefined;
 };

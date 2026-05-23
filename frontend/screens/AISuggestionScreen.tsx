@@ -1,4 +1,3 @@
-// AISuggestionScreen.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -8,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { COLORS } from "../theme/colors";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -20,7 +20,21 @@ export default function AISuggestionScreen() {
   const route: any = useRoute();
   const nav = useNavigation<NavProp>();
 
-  const { plan, date, label, planId } = route.params || {};
+  const { plan, date, label, planId, selectedDays, selectedMealTypes, slotIndex } = route.params || {};
+
+  // Build all slots and find the next one after this
+  const slots: { date: string; label: string }[] = [];
+  if (selectedDays && selectedMealTypes) {
+    for (const d of selectedDays) {
+      for (const m of selectedMealTypes) {
+        slots.push({ date: d, label: m });
+      }
+    }
+  }
+  const currentIndex = slotIndex ?? 0;
+  const nextSlot = slots[currentIndex + 1] ?? null;
+  const totalSlots = slots.length;
+  const progress = `${currentIndex + 1} of ${totalSlots}`;
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,17 +50,16 @@ export default function AISuggestionScreen() {
 
         const days = plan.days || [];
 
-        // Find the matching day by date, or fallback to last day
-        let day =
-          days.find((d: any) => d.date === date) || (days.length > 0 ? days[days.length - 1] : null);
+        const day =
+          days.find((d: any) => d.date === date) ||
+          (days.length > 0 ? days[days.length - 1] : null);
 
         if (!day) {
           setError("Could not find a matching day in the plan.");
           return;
         }
 
-        // Find the meal by label, or fallback to last meal
-        let meal =
+        const meal =
           day.meals?.find((m: any) => m.label === label) ||
           (day.meals && day.meals[day.meals.length - 1]);
 
@@ -55,14 +68,15 @@ export default function AISuggestionScreen() {
           return;
         }
 
-        // Load recipes & match by recipeId
-        const allRecipes = await listRecipes();
-        const found = allRecipes.find((r: Recipe) => r.id === meal.recipeId) || null;
+        const allRecipes: Recipe[] = await listRecipes();
+        const found =
+          allRecipes.find((r: Recipe) => r.id === meal.recipeId) || null;
 
         if (!found) {
           setError("Recipe not found in recipe list.");
         } else {
           setRecipe(found);
+          console.log("AI recipe from backend:", found);
         }
       } catch (e: any) {
         console.error(e);
@@ -75,53 +89,78 @@ export default function AISuggestionScreen() {
     load();
   }, [plan, date, label]);
 
-  function handleSave() {
-    // Meal is already saved by addAiMealToPlan.
-    nav.navigate("Home");
+  function handleNext() {
+    if (nextSlot) {
+      nav.navigate("AIGenerate" as any, {
+        planId,
+        date: nextSlot.date,
+        label: nextSlot.label,
+        selectedDays,
+        selectedMealTypes,
+        slotIndex: currentIndex + 1,
+      });
+    } else {
+      nav.navigate("Home" as any, { planId });
+    }
   }
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <SafeAreaView style={styles.center}>
         <ActivityIndicator color={COLORS.primary} />
         <Text style={styles.muted}>Getting your AI meal...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !recipe) {
     return (
-      <View style={styles.center}>
+      <SafeAreaView style={styles.center}>
         <Text style={styles.error}>{error || "No recipe to show."}</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleNext}>
           <Text style={{ color: COLORS.white }}>Back to Home</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
+  const instructionsText =
+    (Array.isArray((recipe as any).instructions) &&
+      (recipe as any).instructions.join("\n\n")) ||
+    (typeof (recipe as any).instructions === "string" &&
+      (recipe as any).instructions) ||
+    (Array.isArray((recipe as any).steps) &&
+      (recipe as any).steps.join("\n\n")) ||
+    (typeof (recipe as any).method === "string" && (recipe as any).method) ||
+    "No instructions provided by AI.";
+
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
     <ScrollView style={styles.container}>
+      {totalSlots > 1 && (
+        <Text style={styles.progress}>
+          Meal {progress} — {date} {label}
+        </Text>
+      )}
       <Text style={styles.title}>{recipe.title || "AI Suggestion"}</Text>
 
       <Text style={styles.sectionTitle}>Ingredients</Text>
-      {(recipe.ingredients || []).map((i, idx) => (
+      {(recipe.ingredients || []).map((i: string, idx: number) => (
         <Text key={idx} style={styles.ingredient}>
           • {i}
         </Text>
       ))}
 
       <Text style={styles.sectionTitle}>Instructions</Text>
-      <Text style={styles.instructions}>
-        {Array.isArray(recipe.instructions)
-          ? recipe.instructions.join("\n\n")
-          : recipe.instructions}
-      </Text>
+      <Text style={styles.instructions}>{instructionsText}</Text>
 
-      <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-        <Text style={{ color: COLORS.white }}>Save to Meal Plan</Text>
+      <TouchableOpacity style={styles.saveBtn} onPress={handleNext}>
+        <Text style={{ color: COLORS.white }}>
+          {nextSlot ? `Next: ${nextSlot.date} ${nextSlot.label} →` : "View Meal Plan"}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -132,6 +171,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.white,
+    padding: 18,
   },
   title: { fontFamily: "Roboto_700Bold", fontSize: 20 },
   sectionTitle: { marginTop: 12, fontFamily: "Roboto_700Bold" },
@@ -150,6 +190,7 @@ const styles = StyleSheet.create({
   },
   muted: { marginTop: 10, color: COLORS.muted },
   error: { color: "red", marginBottom: 10 },
+  progress: { fontFamily: "Roboto_400Regular", color: COLORS.muted, marginBottom: 6 },
 });
 
 // import React from "react";

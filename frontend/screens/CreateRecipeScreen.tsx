@@ -12,10 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-// --- Type Definitions (Assumes RootStackParamList is defined in '../navigation') ---
-// NOTE: Adjust the import path for RootStackParamList as necessary
-import { RootStackParamList } from '../navigation'; 
+import { RootStackParamList } from '../navigation';
+import { createRecipe } from '../lib/api';
 
 // Define the props type for this screen. Assumes the screen is named 'CreateRecipe'
 type CreateRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateRecipe'>;
@@ -40,17 +38,32 @@ export default function CreateRecipeScreen({ navigation }: CreateRecipeScreenPro
     }
 
     setIsSaving(true);
-    // TODO: Implement actual API call here to save the recipe data
-    
-    // Example Simulation:
-    console.log('Saving Recipe:', { mealName, servings, cookTime, ingredients, instructions });
-    
-    setTimeout(() => {
-        setIsSaving(false);
-        Alert.alert('Success', `${mealName} saved successfully!`);
-        // Navigate back to Home or to the new recipe's detail screen
-        navigation.navigate('Home'); // Cast necessary if Home is defined without params
-    }, 1500);
+    try {
+      const ingredientLines = ingredients
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const stepLines = instructions
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const cookTimeMinutes = parseInt(cookTime, 10) || undefined;
+
+      await createRecipe({
+        title: mealName.trim(),
+        ingredients: ingredientLines,
+        steps: stepLines,
+        cook_time: cookTimeMinutes,
+      });
+
+      Alert.alert('Saved!', `${mealName} has been added to your recipes.`, [
+        { text: 'OK', onPress: () => navigation.navigate('Home') },
+      ]);
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Failed to save recipe. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleServingsChange = (delta: number) => {

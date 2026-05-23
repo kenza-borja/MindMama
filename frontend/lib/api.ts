@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://192.168.1.136:4000";
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
 type PlanPayload = {
   startDate: string;
   days: { date: string; meals: string[] }[];
@@ -15,7 +16,18 @@ export type Recipe = {
   id: string;
   title: string;
   ingredients: string[];
-  instructions: string;
+  steps: string[];
+  prep_time?: number;
+  cook_time?: number;
+  source?: string;
+};
+
+type CreateRecipePayload = {
+  title: string;
+  ingredients: string[];
+  steps: string[];
+  prep_time?: number;
+  cook_time?: number;
 };
 
 
@@ -65,6 +77,15 @@ export async function addAiMealToPlan(planId: string, payload: AddMealPayload) {
 
 export async function listRecipes() {
   const res = await fetch(`${API_BASE_URL}/recipes`);
+  return handleResponse(res);
+}
+
+export async function createRecipe(payload: CreateRecipePayload) {
+  const res = await fetch(`${API_BASE_URL}/recipes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
   return handleResponse(res);
 }
 

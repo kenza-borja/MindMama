@@ -1,161 +1,264 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  FlatList,
+  ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
-import { COLORS } from "../theme/colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  useNavigation,
   useRoute,
-  RouteProp,
+  useNavigation,
+  useFocusEffect,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation";
-import { getPlan } from "../lib/api";
+import { COLORS } from "../theme/colors";
+import { getPlan, listRecipes, type Recipe } from "../lib/api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, "Home">;
-type RouteProps = RouteProp<RootStackParamList, "Home"> & {
-  params?: { planId?: string };
-};
-
-interface Plan {
-  id: string;
-  startDate: string;
-  days: {
-    date: string;
-    meals: any[]; // can be strings or objects { label, recipeId }
-  }[];
-}
 
 export default function HomeScreen() {
+  const route: any = useRoute();
   const nav = useNavigation<NavProp>();
-  const route = useRoute<RouteProps>();
 
-  const initialPlanId = (route.params as { planId?: string } | undefined)?.planId ?? null;
-
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [planId, setPlanId] = useState<string | null>(initialPlanId);
+  const [plan, setPlan] = useState<any | null>(null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadPlan() {
-      if (!planId) {
-        setLoading(false);
-        return;
+  useFocusEffect(
+    useCallback(() => {
+      async function load() {
+        try {
+          setLoading(true);
+          setError(null);
+
+          let planId: string | undefined = route.params?.planId;
+          if (!planId) {
+            planId = (await AsyncStorage.getItem("currentPlanId")) ?? undefined;
+          }
+          if (planId) {
+            await AsyncStorage.setItem("currentPlanId", planId);
+          }
+
+          if (!planId) {
+            setPlan(null);
+            setRecipes([]);
+            setLoading(false);
+            return;
+          }
+
+          const [planData, recipesData] = await Promise.all([
+            getPlan(planId),
+            listRecipes(),
+          ]);
+
+          setPlan(planData);
+          setRecipes(recipesData);
+        } catch (e: any) {
+          console.error("Error loading plan in Home:", e);
+          setError(e?.message || "Failed to load plan.");
+          setPlan(null);
+          setRecipes([]);
+        } finally {
+          setLoading(false);
+        }
       }
 
-      try {
-        const data = await getPlan(planId);
-        setPlan(data);
-      } catch (err) {
-        console.log("No plan found yet:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
+      load();
+    }, [route.params?.planId])
+  );
 
-    loadPlan();
-  }, [planId]);
+  const handleCreateOrEditPlan = () => {
+    nav.navigate("CreatePlan");
+  };
 
-  const formattedMeals =
-    plan?.days?.flatMap((d) =>
-      (d.meals || []).map((m: any, idx: number) => {
-        const label = typeof m === "string" ? m : m.label || "Meal";
-        const hasRecipe = typeof m === "object" && m.recipeId;
-        return {
-          id: `${d.date}-${label}-${idx}`,
-          title: `${d.date} - ${label}`,
-          meals: [hasRecipe ? "Recipe added" : "No recipe selected"],
-        };
-      })
-    ) || [];
+  const handleViewShoppingList = () => {
+    nav.navigate("ShoppingList" as any);
+  };
 
-  function goToShoppingList() {
-    if (!plan?.id) {
-      alert("Please create a plan first.");
-      return;
-    }
-    nav.navigate("ShoppingList", { planId: plan.id });
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <ActivityIndicator color={COLORS.primary} />
+          <Text style={styles.muted}>Loading your plan...</Text>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Sara's kitchen</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Sara&apos;s Kitchen</Text>
+        <Text style={styles.subtitle}>
+          It&apos;s a beautiful day to cook something good!
+        </Text>
 
-        {loading && <ActivityIndicator size="large" color={COLORS.primary} />}
+        <View style={styles.divider} />
 
-        {!loading && formattedMeals.length === 0 && (
-          <Text style={{ color: COLORS.muted, marginVertical: 20 }}>
-            No meal plans yet. Create your first one!
+        <Text style={styles.sectionHeader}>THE MEAL PLAN</Text>
+
+        {error && <Text style={styles.error}>{error}</Text>}
+
+        {!plan || plan.days.length === 0 ? (
+          <Text style={styles.muted}>
+            No meals yet. Create a plan to get started.
           </Text>
-        )}
+        ) : (
+          plan.days.map((day: any, i: number) => {
+            const visibleMeals = (day.meals || []).filter(
+              (m: any) => m.recipeId
+            );
 
-        <FlatList
-          data={formattedMeals}
-          keyExtractor={(i) => i.id}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardSubtitle}>{item.meals.join(", ")}</Text>
-            </View>
-          )}
-        />
+            if (visibleMeals.length === 0) {
+              return (
+                <View key={i} style={styles.mealCard}>
+                  <Text style={styles.mealCardHeader}>{day.date}</Text>
+                  <View style={styles.mealInnerCard}>
+                    <Text style={styles.mealRecipeTitle}>
+                      No AI meals yet for this day.
+                    </Text>
+                  </View>
+                </View>
+              );
+            }
+
+            return visibleMeals.map((meal: any, j: number) => {
+              const recipe = recipes.find((r) => r.id === meal.recipeId);
+              const recipeTitle = recipe?.title || "AI Meal";
+
+              return (
+                <View key={`${i}-${j}`} style={styles.mealCard}>
+                  <Text style={styles.mealCardHeader}>
+                    {day.date}&apos;s {meal.label} Plan
+                  </Text>
+                  <View style={styles.mealInnerCard}>
+                    <Text style={styles.mealRecipeTitle}>{recipeTitle}</Text>
+                  </View>
+                </View>
+              );
+            });
+          })
+        )}
 
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => nav.navigate("CreatePlan")}
+          onPress={handleCreateOrEditPlan}
         >
-          <Text style={styles.btnText}>Create or Edit Plan</Text>
+          <Text style={styles.primaryBtnText}>Create or Edit Plan</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryBtn} onPress={goToShoppingList}>
-          <Text style={styles.secondaryText}>View My Shopping List</Text>
+        <TouchableOpacity
+          style={styles.secondaryBtn}
+          onPress={handleViewShoppingList}
+        >
+          <Text style={styles.secondaryBtnText}>View My shopping List</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: COLORS.white },
-  title: {
+  container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
+  scrollContent: {
+    paddingBottom: 32,
+    flexGrow: 1,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: { fontFamily: "Roboto_700Bold", fontSize: 30, marginBottom: 12 },
+  subtitle: {
+    fontFamily: "Roboto_400Regular",
+    fontSize: 20,
+    marginBottom: 12,
+    color: COLORS.muted,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.primary,
+    opacity: 0.4,
+    marginBottom: 12,
+  },
+  sectionHeader: {
     fontFamily: "Roboto_700Bold",
-    fontSize: 30,
-    marginBottom: 10,
-    color: COLORS.text,
+    fontSize: 14,
+    marginBottom: 12,
   },
-  card: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
+  muted: {
+    fontFamily: "Roboto_400Regular",
+    color: COLORS.muted,
+  },
+  error: {
+    fontFamily: "Roboto_400Regular",
+    color: "red",
+    marginBottom: 8,
+  },
+  mealCard: {
+    padding: 14,
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 12,
+    marginBottom: 10,
+    marginTop: 4,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  mealCardHeader: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 13,
+    color: COLORS.primary,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  mealInnerCard: {
     borderRadius: 8,
-    marginBottom: 10,
-    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: COLORS.white,
   },
-  cardTitle: { fontFamily: "Roboto_700Bold", fontSize: 20 },
-  cardSubtitle: {
+  mealRecipeTitle: {
     fontFamily: "Roboto_400Regular",
     fontSize: 16,
-    color: COLORS.muted,
-    marginTop: 4,
+    color: COLORS.text,
   },
   primaryBtn: {
+    marginTop: 24,
     backgroundColor: COLORS.primary,
-    padding: 14,
+    paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 10,
   },
-  btnText: { fontFamily: "Roboto_700Bold", fontSize: 20, color: COLORS.white },
-  secondaryBtn: { marginTop: 8, padding: 12, alignItems: "center" },
-  secondaryText: { color: COLORS.primary, fontSize: 20 },
+  primaryBtnText: {
+    color: COLORS.white,
+    fontFamily: "Roboto_700Bold",
+  },
+  secondaryBtn: {
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: "center",
+  },
+  secondaryBtnText: {
+    fontFamily: "Roboto_700Bold",
+    color: COLORS.primary,
+  },
 });
+
 
 
 // import React, { useEffect, useState } from "react";
@@ -172,7 +275,7 @@ const styles = StyleSheet.create({
 // import { useNavigation } from "@react-navigation/native";
 // import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 // import { RootStackParamList } from "../navigation";
-// import { getPlan } from "../lib/api"; 
+// import { getPlan } from "../lib/api";
 
 // type NavProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../theme/colors";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,7 +23,7 @@ export default function AIGenerateScreen() {
   const nav = useNavigation<NavProp>();
   const route = useRoute<RouteProps>();
 
-  const { planId, date, label } = route.params || {};
+  const { planId, date, label, selectedDays, selectedMealTypes, slotIndex } = route.params || {};
 
   const [people, setPeople] = useState("2");
   const [time, setTime] = useState(""); // minutes
@@ -69,9 +71,13 @@ export default function AIGenerateScreen() {
         planId,
         date,
         label,
-        // pass the whole plan or just what you need
         plan: updatedPlan,
+        selectedDays,
+        selectedMealTypes,
+        slotIndex,
       });
+      
+      await AsyncStorage.setItem("currentPlanId", String(planId));
 
     } catch (err: any) {
       console.error(err);
@@ -82,6 +88,7 @@ export default function AIGenerateScreen() {
   }
 
   return (
+    <SafeAreaView style={styles.safeArea}>
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Hi, AI needs to know!</Text>
 
@@ -133,10 +140,12 @@ export default function AIGenerateScreen() {
         )}
       </TouchableOpacity>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: COLORS.white },
   container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
   title: { fontFamily: "Roboto_700Bold", fontSize: 20, marginBottom: 12 },
   label: { fontFamily: "Roboto_700Bold", marginTop: 8, color: COLORS.muted },

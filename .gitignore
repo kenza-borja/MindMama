@@ -1,38 +1,47 @@
-node_modules
-.expo/
-dist
+# ── Secrets & environment variables ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+ai/.env
+ai/.env.*
+!ai/.env.example
 
-# Node
+# ── Node / npm ────────────────────────────────────────────────────────────────
 node_modules/
-npm-debug.log
-yarn.lock
+npm-debug.log*
+yarn-error.log
+package-lock.json
 
-# Expo / React Native
+# ── Expo / React Native ───────────────────────────────────────────────────────
 .expo/
 .expo-shared/
 android/
 ios/
 build/
 dist/
-temp/
-logs/
 
-# OS
+# ── Python ────────────────────────────────────────────────────────────────────
+ai/.venv/
+ai/**/__pycache__/
+ai/**/*.pyc
+ai/**/*.pyo
+__pycache__/
+*.pyc
+
+# ── Logs & temp files ─────────────────────────────────────────────────────────
+logs/
+*.log
+temp/
+
+# ── OS files ──────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-ai/.venv/
-ai/__pycache__/
-backend/.env
-ai/*.json
-
-
-# Python cache + virtualenv
-ai/.venv/
-ai/**/__pycache__/
-ai/*.json
-
-# Env
-.env
-ai/.env
-backend/.env
+# ── Firebase service account keys ────────────────────────────────────────────
+*-service-account*.json
+serviceAccountKey.json
+firebase-adminsdk*.json
+.gstack/
