@@ -36,11 +36,19 @@ function loadServiceAccount(env) {
   try {
     parsed = JSON.parse(raw.trim());
   } catch {
-    throw new Error(
-      `${source} is not valid JSON (length ${raw.length}, starts with ` +
-        `${JSON.stringify(raw.slice(0, 6))}). If you pasted raw JSON, the ` +
-        `wrapping braces are easy to lose - use the base64 form instead.`
-    );
+    // The two variables are easy to mix up in a dashboard, and the failure
+    // costs a full redeploy to discover. If the value decodes to JSON,
+    // accept it whichever name it arrived under.
+    try {
+      parsed = JSON.parse(
+        Buffer.from(raw.trim(), "base64").toString("utf8").trim()
+      );
+    } catch {
+      throw new Error(
+        `${source} is neither JSON nor base64-encoded JSON (length ` +
+          `${raw.length}, starts with ${JSON.stringify(raw.slice(0, 6))}).`
+      );
+    }
   }
 
   if (!parsed.project_id || !parsed.private_key) {
