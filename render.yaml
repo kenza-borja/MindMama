@@ -15,6 +15,10 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn ai.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      # These pins predate Python 3.13; match the version the project is
+      # developed against rather than taking Render's newer default.
+      - key: PYTHON_VERSION
+        value: "3.12.10"
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
