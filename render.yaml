@@ -41,8 +41,10 @@ services:
       # Internal URL of the AI service above.
       - key: AI_URL
         sync: false
-      # The Firebase service account JSON, pasted as a single line.
-      - key: FIREBASE_SERVICE_ACCOUNT
+      # The service account JSON, base64 encoded. Raw JSON loses its braces
+      # or newlines in dashboard paste boxes; base64 is a single safe token.
+      # Generate with: npm run encode-key -- path\to\serviceAccount.json
+      - key: FIREBASE_SERVICE_ACCOUNT_B64
         sync: false
       # The deployed web app's origin, e.g. https://mindmama.vercel.app
       - key: ALLOWED_ORIGINS

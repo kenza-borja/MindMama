@@ -14,6 +14,10 @@ export function getEnv() {
     // Unset means allow any origin, which is what local dev wants.
     ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
 
+    // Preferred in deployed environments: the service account JSON, base64
+    // encoded, so embedded newlines survive the trip through a dashboard.
+    FIREBASE_SERVICE_ACCOUNT_B64: process.env.FIREBASE_SERVICE_ACCOUNT_B64,
+
     FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT
   };
 }

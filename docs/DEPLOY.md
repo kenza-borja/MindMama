@@ -36,12 +36,31 @@ has ever been committed.
 
    **mindmama-api**
    - `AI_URL` - the AI service's URL, shown once it deploys
-   - `FIREBASE_SERVICE_ACCOUNT` - from `backend/.env`, one line
+   - `FIREBASE_SERVICE_ACCOUNT_B64` - see below
    - `ALLOWED_ORIGINS` - leave blank until step 3, then set it to the Vercel URL
    - `API_KEY` - Render generates this. Copy the value, it is needed next
 
 4. Check it is alive: `https://mindmama-api.onrender.com/health` returns
    `{"ok":true}`
+
+### Encoding the service account key
+
+The service account JSON contains newlines inside `private_key`. Pasting it
+raw into a dashboard reliably loses the wrapping braces or mangles the
+newlines, and the resulting crash prints the key into the deploy log. Encode
+it instead:
+
+```powershell
+cd backend
+npm run encode-key -- C:\path\to\serviceAccount.json | clip
+```
+
+That puts a single base64 line on the clipboard with nothing shown on screen.
+Paste it into `FIREBASE_SERVICE_ACCOUNT_B64`.
+
+Never paste the raw JSON into a chat, an issue, or a commit. If it does get
+exposed, delete the key in Google Cloud Console under IAM & Admin > Service
+Accounts > Keys and create a new one. The old key stops working immediately.
 
 ## 3. Deploy the web app (Vercel)
 
