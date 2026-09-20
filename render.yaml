@@ -23,6 +23,10 @@ services:
         sync: false
       - key: GROQ_MODEL
         sync: false
+      # Shared secret the Node API must present. Copy this generated value
+      # into AI_API_KEY on mindmama-api below.
+      - key: AI_API_KEY
+        generateValue: true
 
   - type: web
     name: mindmama-api
@@ -40,6 +44,9 @@ services:
         generateValue: true
       # Internal URL of the AI service above.
       - key: AI_URL
+        sync: false
+      # Must match AI_API_KEY on mindmama-ai, or every AI call returns 401.
+      - key: AI_API_KEY
         sync: false
       # The service account JSON, base64 encoded. Raw JSON loses its braces
       # or newlines in dashboard paste boxes; base64 is a single safe token.

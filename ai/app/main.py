@@ -6,9 +6,10 @@ Handles meal suggestions, recipe extraction, and supportive messaging
 from typing import List
 import logging
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from ai.app.auth import require_api_key
 from ai.app.models import (
     RecipeDraft,
     MealSuggestionRequest,
@@ -66,7 +67,7 @@ async def health_check():
     }
 
 
-@app.post("/ai/suggest-meal", response_model=RecipeDraft)
+@app.post("/ai/suggest-meal", response_model=RecipeDraft, dependencies=[Depends(require_api_key)])
 async def suggest_meal(request: MealSuggestionRequest):
     """
     Generate meal suggestion based on user preferences
@@ -118,7 +119,7 @@ async def suggest_meal(request: MealSuggestionRequest):
         ) from e
 
 
-@app.post("/ai/extract-recipe", response_model=RecipeDraft)
+@app.post("/ai/extract-recipe", response_model=RecipeDraft, dependencies=[Depends(require_api_key)])
 async def extract_recipe(request: RecipeExtractionRequest):
     """
     Extract structured recipe from unstructured text
@@ -161,7 +162,7 @@ async def extract_recipe(request: RecipeExtractionRequest):
         ) from e
 
 
-@app.post("/ai/generate-shopping-list")
+@app.post("/ai/generate-shopping-list", dependencies=[Depends(require_api_key)])
 async def generate_shopping_list(recipes: List[dict]):
     """
     Generate aggregated shopping list from multiple recipes
@@ -197,7 +198,7 @@ async def generate_shopping_list(recipes: List[dict]):
         ) from e
 
 
-@app.post("/ai/generate-message")
+@app.post("/ai/generate-message", dependencies=[Depends(require_api_key)])
 async def generate_supportive_message(request: SupportiveMessageRequest):
     """
     Generate supportive, encouraging message for daily planning
@@ -231,7 +232,7 @@ async def generate_supportive_message(request: SupportiveMessageRequest):
         ) from e
 
 
-@app.get("/ai/test")
+@app.get("/ai/test", dependencies=[Depends(require_api_key)])
 async def test_endpoint():
     """
     Simple test endpoint to verify AI connection

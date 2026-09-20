@@ -10,6 +10,10 @@ export function getEnv() {
     // in any deployed environment.
     API_KEY: process.env.API_KEY,
 
+    // Shared secret this service sends when calling the AI orchestrator.
+    // Must match AI_API_KEY on that service.
+    AI_API_KEY: process.env.AI_API_KEY,
+
     // Comma-separated origins allowed to call the API from a browser.
     // Unset means allow any origin, which is what local dev wants.
     ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,

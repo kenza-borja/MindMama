@@ -3,8 +3,11 @@ import { timingSafeEqual } from "node:crypto";
 import { getEnv } from "../../config/env.js";
 
 function secretsMatch(a, b) {
-  const left = Buffer.from(String(a));
-  const right = Buffer.from(String(b));
+  // Trim both sides. Dashboard paste boxes and shell quoting pick up stray
+  // whitespace and newlines, which otherwise fail the length check and look
+  // identical to a wrong key.
+  const left = Buffer.from(String(a).trim());
+  const right = Buffer.from(String(b).trim());
   if (left.length !== right.length) return false;
   return timingSafeEqual(left, right);
 }
