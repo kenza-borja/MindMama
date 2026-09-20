@@ -12,7 +12,13 @@ import { getEnv } from "./config/env.js";
 const app = express();
 
 const { ALLOWED_ORIGINS } = getEnv();
-const allowList = ALLOWED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean);
+
+// A browser's Origin header is scheme+host+port with no path, so a configured
+// value copied from the address bar ("https://app.vercel.app/") never matches
+// and CORS fails with no allow-origin header at all. Normalise instead.
+const allowList = ALLOWED_ORIGINS?.split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
 app.use(
   cors({
