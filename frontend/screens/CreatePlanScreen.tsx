@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../theme/colors";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -115,8 +115,15 @@ export default function CreatePlanScreen() {
     }
   }
 
+  function handleClose() {
+    nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Home" }] }));
+  }
+
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
+        <Text style={styles.closeBtnText}>✕</Text>
+      </TouchableOpacity>
       <ScrollView>
         <Text style={styles.title}>Sara's Kitchen</Text>
         <Text style={styles.subtitle}>Let's create your meals !</Text>
@@ -202,6 +209,14 @@ export default function CreatePlanScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
+  closeBtn: {
+    alignSelf: "flex-end",
+    padding: 8,
+  },
+  closeBtnText: {
+    fontSize: 22,
+    color: COLORS.muted,
+  },
   title: { fontFamily: "Roboto_700Bold", fontSize: 30, marginBottom: 12 },
   subtitle: {
     fontFamily: "Roboto_400Regular",

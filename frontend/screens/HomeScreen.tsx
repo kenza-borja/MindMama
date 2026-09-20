@@ -138,7 +138,8 @@ export default function HomeScreen() {
             );
           })
         )}
-
+      </ScrollView>
+      <View style={styles.bottomActions}>
         <TouchableOpacity
           style={styles.primaryBtn}
           onPress={handleCreateOrEditPlan}
@@ -150,9 +151,9 @@ export default function HomeScreen() {
           style={styles.secondaryBtn}
           onPress={handleViewShoppingList}
         >
-          <Text style={styles.secondaryBtnText}>View My shopping List</Text>
+          <Text style={styles.secondaryBtnText}>View My Shopping List</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -249,8 +250,13 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     flex: 1,
   },
+  bottomActions: {
+    padding: 16,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#EDE7F6",
+  },
   primaryBtn: {
-    marginTop: 24,
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
     borderRadius: 10,
@@ -261,7 +267,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto_700Bold",
   },
   secondaryBtn: {
-    marginTop: 12,
+    marginTop: 10,
     paddingVertical: 14,
     borderRadius: 10,
     borderWidth: 1,

@@ -126,9 +126,18 @@ export default function ShoppingListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Shopping List</Text>
+      {/* Purple top bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => nav.goBack()} style={styles.backBtn}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Shopping List</Text>
+        </View>
+        <View style={styles.backBtn} />
+      </View>
 
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {totalCount > 0 && (
           <Text style={styles.progress}>
             {checkedCount} of {totalCount} items picked
@@ -187,32 +196,46 @@ export default function ShoppingListScreen() {
               })}
             </View>
           ))}
-
-        <TouchableOpacity
-          style={styles.primaryBtn}
-          onPress={() => nav.navigate("Home")}
-        >
-          <Text style={styles.primaryBtnText}>Back to Meal Plan</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
+  container: { flex: 1, backgroundColor: COLORS.primary },
+  topBar: {
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+  },
+  backBtn: {
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backArrow: {
+    color: COLORS.white,
+    fontSize: 22,
+    fontFamily: "Roboto_400Regular",
+  },
+  topBarCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  topBarTitle: {
+    color: COLORS.white,
+    fontFamily: "Roboto_700Bold",
+    fontSize: 17,
+  },
+  scrollView: { flex: 1, backgroundColor: COLORS.white },
   scrollContent: { padding: 18, paddingBottom: 40 },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 18,
-  },
-  title: {
-    fontFamily: "Roboto_700Bold",
-    fontSize: 26,
-    color: COLORS.text,
-    marginBottom: 4,
   },
   progress: {
     fontFamily: "Roboto_400Regular",
@@ -294,12 +317,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
     color: COLORS.muted,
   },
-  primaryBtn: {
-    marginTop: 8,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  primaryBtnText: { color: COLORS.white, fontFamily: "Roboto_700Bold" },
 });

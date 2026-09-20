@@ -46,7 +46,7 @@ const CATEGORY_KEYWORDS = {
   ],
 };
 
-function inferCategory(line) {
+export function inferCategory(line) {
   if (!line || typeof line !== "string") return "Other";
   const lower = line.toLowerCase();
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
@@ -55,7 +55,7 @@ function inferCategory(line) {
   return "Other";
 }
 
-function inferIngredientNameFromLine(line) {
+export function inferIngredientNameFromLine(line) {
   if (!line || typeof line !== "string") return "unknown";
 
   const cleaned = line
@@ -70,7 +70,7 @@ function inferIngredientNameFromLine(line) {
   // Skip leading numbers and units, take the first meaningful word
   const units = new Set(["g", "kg", "ml", "l", "cup", "cups", "tbsp", "tsp", "oz", "lb", "clove", "cloves", "pinch", "handful", "bunch"]);
   for (const part of parts) {
-    if (!isNaN(Number(part)) || units.has(part)) continue;
+    if (!isNaN(Number(part)) || units.has(part) || /^\d+\/\d+$/.test(part)) continue;
     return part;
   }
   return parts[parts.length - 1];

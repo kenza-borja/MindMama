@@ -34,7 +34,6 @@ export default function AISuggestionScreen() {
   const currentIndex = slotIndex ?? 0;
   const nextSlot = slots[currentIndex + 1] ?? null;
   const totalSlots = slots.length;
-  const progress = `${currentIndex + 1} of ${totalSlots}`;
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,7 +99,6 @@ export default function AISuggestionScreen() {
         slotIndex: currentIndex + 1,
       });
     } else {
-      // Reset the whole stack to Home so it re-fetches fresh with the correct planId
       nav.dispatch(
         CommonActions.reset({
           index: 0,
@@ -112,7 +110,7 @@ export default function AISuggestionScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
+      <SafeAreaView style={styles.loadingArea}>
         <ActivityIndicator color={COLORS.primary} />
         <Text style={styles.muted}>Getting your AI meal...</Text>
       </SafeAreaView>
@@ -121,127 +119,245 @@ export default function AISuggestionScreen() {
 
   if (error || !recipe) {
     return (
-      <SafeAreaView style={styles.center}>
-        <Text style={styles.error}>{error || "No recipe to show."}</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleNext}>
-          <Text style={{ color: COLORS.white }}>Back to Home</Text>
+      <SafeAreaView style={styles.loadingArea}>
+        <Text style={styles.errorText}>{error || "No recipe to show."}</Text>
+        <TouchableOpacity style={styles.actionBtn} onPress={handleNext}>
+          <Text style={styles.actionBtnText}>Back to Home</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
-  const instructionsText =
-    (Array.isArray((recipe as any).instructions) &&
-      (recipe as any).instructions.join("\n\n")) ||
-    (typeof (recipe as any).instructions === "string" &&
-      (recipe as any).instructions) ||
-    (Array.isArray((recipe as any).steps) &&
-      (recipe as any).steps.join("\n\n")) ||
-    (typeof (recipe as any).method === "string" && (recipe as any).method) ||
-    "No instructions provided by AI.";
+  // Derive cook/prep time display
+  const totalTime =
+    ((recipe as any).cook_time || 0) + ((recipe as any).prep_time || 0);
+
+  // Build instructions content
+  const stepsSource: any = (recipe as any).steps || (recipe as any).instructions || (recipe as any).method;
+  const stepsArray: string[] = Array.isArray(stepsSource)
+    ? stepsSource
+    : typeof stepsSource === "string"
+    ? [stepsSource]
+    : ["No instructions provided by AI."];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-    <ScrollView style={styles.container}>
-      {totalSlots > 1 && (
-        <Text style={styles.progress}>
-          Meal {progress} — {date} {label}
-        </Text>
-      )}
-      <Text style={styles.title}>{recipe.title || "AI Suggestion"}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      {/* Purple top bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => nav.goBack()} style={styles.backBtn}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>
+            {date} · {label}
+          </Text>
+          {totalSlots > 1 && (
+            <Text style={styles.topBarSubtitle}>
+              Meal {currentIndex + 1} of {totalSlots}
+            </Text>
+          )}
+        </View>
+        <View style={styles.backBtn} />
+      </View>
 
-      <Text style={styles.sectionTitle}>Ingredients</Text>
-      {(recipe.ingredients || []).map((i: string, idx: number) => (
-        <Text key={idx} style={styles.ingredient}>
-          • {i}
-        </Text>
-      ))}
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Hero card */}
+        <View style={styles.heroCard}>
+          <Text style={styles.recipeTitle}>{recipe.title || "AI Suggestion"}</Text>
+          <View style={styles.heroMeta}>
+            <View style={styles.mealTypePill}>
+              <Text style={styles.mealTypePillText}>{label}</Text>
+            </View>
+            {totalTime > 0 && (
+              <Text style={styles.timeText}>~{totalTime} min</Text>
+            )}
+          </View>
+        </View>
 
-      <Text style={styles.sectionTitle}>Instructions</Text>
-      <Text style={styles.instructions}>{instructionsText}</Text>
+        {/* Ingredients card */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionHeader}>INGREDIENTS</Text>
+          {(recipe.ingredients || []).map((ingredient: string, idx: number) => (
+            <View key={idx} style={styles.ingredientRow}>
+              <Text style={styles.ingredientDot}>●</Text>
+              <Text style={styles.ingredientText}>{ingredient}</Text>
+            </View>
+          ))}
+        </View>
 
-      <TouchableOpacity style={styles.saveBtn} onPress={handleNext}>
-        <Text style={{ color: COLORS.white }}>
-          {nextSlot ? `Next: ${nextSlot.date} ${nextSlot.label} →` : "View Meal Plan"}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Instructions card */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionHeader}>METHOD</Text>
+          {stepsArray.map((step: string, idx: number) => (
+            <View key={idx} style={styles.stepRow}>
+              <Text style={styles.stepNumber}>{stepsArray.length > 1 ? `${idx + 1}.` : ""}</Text>
+              <Text style={styles.stepText}>{step}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Fixed bottom action button */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity style={styles.actionBtn} onPress={handleNext}>
+          <Text style={styles.actionBtnText}>
+            {nextSlot ? `Next: ${nextSlot.date} ${nextSlot.label} →` : "View Meal Plan"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
-  center: {
+  safeArea: { flex: 1, backgroundColor: COLORS.primary },
+  loadingArea: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.white,
     padding: 18,
   },
-  title: { fontFamily: "Roboto_700Bold", fontSize: 20 },
-  sectionTitle: { marginTop: 12, fontFamily: "Roboto_700Bold" },
-  ingredient: { fontFamily: "Roboto_400Regular", marginTop: 6 },
-  instructions: {
-    marginTop: 6,
+  topBar: {
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+  },
+  backBtn: {
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backArrow: {
+    color: COLORS.white,
+    fontSize: 22,
     fontFamily: "Roboto_400Regular",
+  },
+  topBarCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  topBarTitle: {
+    color: COLORS.white,
+    fontFamily: "Roboto_700Bold",
+    fontSize: 17,
+  },
+  topBarSubtitle: {
+    color: COLORS.white,
+    fontFamily: "Roboto_400Regular",
+    fontSize: 12,
+    opacity: 0.8,
+    marginTop: 2,
+  },
+  scrollView: { flex: 1, backgroundColor: COLORS.white },
+  scrollContent: { paddingBottom: 16 },
+  heroCard: {
+    backgroundColor: COLORS.cardBg,
+    padding: 20,
+  },
+  recipeTitle: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 22,
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  heroMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  mealTypePill: {
+    backgroundColor: COLORS.primary + "22",
+    borderRadius: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  mealTypePillText: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 12,
+    color: COLORS.primary,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  timeText: {
+    fontFamily: "Roboto_400Regular",
+    fontSize: 13,
     color: COLORS.muted,
   },
-  saveBtn: {
-    marginTop: 18,
-    backgroundColor: COLORS.primary,
-    padding: 12,
-    alignItems: "center",
-    borderRadius: 8,
+  sectionCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 16,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  muted: { marginTop: 10, color: COLORS.muted },
-  error: { color: "red", marginBottom: 10 },
-  progress: { fontFamily: "Roboto_400Regular", color: COLORS.muted, marginBottom: 6 },
+  sectionHeader: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 12,
+    color: COLORS.primary,
+    letterSpacing: 1.2,
+    marginBottom: 12,
+  },
+  ingredientRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+    gap: 8,
+  },
+  ingredientDot: {
+    color: COLORS.primary,
+    fontSize: 8,
+    marginTop: 5,
+  },
+  ingredientText: {
+    fontFamily: "Roboto_400Regular",
+    fontSize: 15,
+    color: COLORS.text,
+    flex: 1,
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 10,
+    gap: 8,
+  },
+  stepNumber: {
+    fontFamily: "Roboto_700Bold",
+    fontSize: 14,
+    color: COLORS.primary,
+    minWidth: 20,
+  },
+  stepText: {
+    fontFamily: "Roboto_400Regular",
+    fontSize: 15,
+    color: COLORS.text,
+    flex: 1,
+    lineHeight: 22,
+  },
+  bottomBar: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#EDE7F6",
+  },
+  actionBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: "center",
+  },
+  actionBtnText: {
+    color: COLORS.white,
+    fontFamily: "Roboto_700Bold",
+    fontSize: 15,
+  },
+  muted: { marginTop: 10, color: COLORS.muted, fontFamily: "Roboto_400Regular" },
+  errorText: { color: "red", marginBottom: 10, fontFamily: "Roboto_400Regular" },
 });
-
-// import React from "react";
-// import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-// import { useRoute, useNavigation } from "@react-navigation/native";
-// import { COLORS } from "../theme/colors";
-// import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-// import { RootStackParamList } from "../navigation";
-
-// export default function AISuggestionScreen() {
-//   const route: any = useRoute();
-//   type NavProp = NativeStackNavigationProp<RootStackParamList, "AISuggestion">;
-//   const nav = useNavigation<NavProp>();
-//   const { aiResult } = route.params || {};
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>{aiResult?.title || "AI Suggestion"}</Text>
-
-//       <Text style={styles.sectionTitle}>Ingredients</Text>
-//       {(aiResult?.ingredients || []).map((i: string, idx: number) => (
-//         <Text key={idx} style={styles.ingredient}>
-//           • {i}
-//         </Text>
-//       ))}
-
-//       <Text style={styles.sectionTitle}>Instructions</Text>
-//       <Text style={styles.instructions}>{aiResult?.instructions}</Text>
-
-//       <TouchableOpacity style={styles.saveBtn} onPress={() => nav.navigate("Home" as any)}>
-//         <Text style={{ color: COLORS.white }}>Save to Meal Plan</Text>
-//       </TouchableOpacity>
-
-//       <TouchableOpacity style={styles.secondary} onPress={() => nav.navigate("RecipesLibrary" as any)}>
-//         <Text style={{ color: COLORS.primary }}>Or select from saved recipes</Text>
-//       </TouchableOpacity>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1, padding: 18, backgroundColor: COLORS.white },
-//   title: { fontFamily: "Roboto_700Bold", fontSize: 20 },
-//   sectionTitle: { marginTop: 12, fontFamily: "Roboto_700Bold" },
-//   ingredient: { fontFamily: "Roboto_400Regular", marginTop: 6 },
-//   instructions: { marginTop: 6, fontFamily: "Roboto_400Regular", color: COLORS.muted },
-//   saveBtn: { marginTop: 18, backgroundColor: COLORS.primary, padding: 12, alignItems: "center", borderRadius: 8 },
-//   secondary: { marginTop: 10, alignItems: "center" },
-// });

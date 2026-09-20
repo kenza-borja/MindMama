@@ -1,5 +1,27 @@
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
+import { NativeModules, Platform } from "react-native";
+
+const API_PORT = 4000;
+
+function resolveApiBaseUrl(): string {
+  // An explicit value always wins: production builds, tunnels, staging.
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+
+  // Dev: reuse whatever host served the JS bundle. On a phone that is this
+  // machine's current LAN IP, so a new DHCP lease can't break the app.
+  const scriptURL: unknown = NativeModules?.SourceCode?.scriptURL;
+  if (typeof scriptURL === "string") {
+    const host = scriptURL.match(/^https?:\/\/([^/:]+)/)?.[1];
+    if (host) return `http://${host}:${API_PORT}`;
+  }
+
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return `http://${window.location.hostname}:${API_PORT}`;
+  }
+
+  return `http://localhost:${API_PORT}`;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 type PlanPayload = {
   startDate: string;
   days: { date: string; meals: string[] }[];
