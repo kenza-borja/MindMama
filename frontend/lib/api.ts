@@ -22,6 +22,22 @@ function resolveApiBaseUrl(): string {
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
+
+// Shared secret for the deployed API. Unset locally, where the backend
+// skips the check.
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
+
+/**
+ * fetch with the API key attached. Every call goes through here so the
+ * header can't be forgotten at a new call site.
+ */
+function apiFetch(url: string, init: RequestInit = {}) {
+  const headers: Record<string, string> = {
+    ...(init.headers as Record<string, string> | undefined),
+  };
+  if (API_KEY) headers["x-api-key"] = API_KEY;
+  return fetch(url, { ...init, headers });
+}
 type PlanPayload = {
   startDate: string;
   days: { date: string; meals: string[] }[];
@@ -66,7 +82,7 @@ async function handleResponse(res: Response) {
 }
 
 export async function createPlan(payload: PlanPayload) {
-  const res = await fetch(`${API_BASE_URL}/plans`, {
+  const res = await apiFetch(`${API_BASE_URL}/plans`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -75,7 +91,7 @@ export async function createPlan(payload: PlanPayload) {
 }
 
 export async function getPlan(planId: string) {
-  const res = await fetch(`${API_BASE_URL}/plans/${planId}`);
+  const res = await apiFetch(`${API_BASE_URL}/plans/${planId}`);
   return handleResponse(res);
 }
 
@@ -83,7 +99,7 @@ export async function mergePlanDays(
   planId: string,
   days: { date: string; meals: string[] }[]
 ) {
-  const res = await fetch(`${API_BASE_URL}/plans/${planId}/days`, {
+  const res = await apiFetch(`${API_BASE_URL}/plans/${planId}/days`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ days }),
@@ -92,7 +108,7 @@ export async function mergePlanDays(
 }
 
 export async function addSavedMealToPlan(planId: string, payload: AddMealPayload) {
-  const res = await fetch(`${API_BASE_URL}/plans/${planId}/meals/saved`, {
+  const res = await apiFetch(`${API_BASE_URL}/plans/${planId}/meals/saved`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -101,7 +117,7 @@ export async function addSavedMealToPlan(planId: string, payload: AddMealPayload
 }
 
 export async function addAiMealToPlan(planId: string, payload: AddMealPayload) {
-  const res = await fetch(`${API_BASE_URL}/plans/${planId}/meals/ai`, {
+  const res = await apiFetch(`${API_BASE_URL}/plans/${planId}/meals/ai`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -110,12 +126,12 @@ export async function addAiMealToPlan(planId: string, payload: AddMealPayload) {
 }
 
 export async function listRecipes() {
-  const res = await fetch(`${API_BASE_URL}/recipes`);
+  const res = await apiFetch(`${API_BASE_URL}/recipes`);
   return handleResponse(res);
 }
 
 export async function createRecipe(payload: CreateRecipePayload) {
-  const res = await fetch(`${API_BASE_URL}/recipes`, {
+  const res = await apiFetch(`${API_BASE_URL}/recipes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -124,7 +140,7 @@ export async function createRecipe(payload: CreateRecipePayload) {
 }
 
 export async function getShoppingList(planId: string) {
-  const res = await fetch(`${API_BASE_URL}/shopping-list/${planId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/shopping-list/${planId}`, {
     method: "POST",
   });
   return handleResponse(res);

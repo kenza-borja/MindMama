@@ -57,8 +57,11 @@ describe("getPlan", () => {
 
     const result = await getPlan("abc");
     expect(result).toEqual(fakePlan);
+    // Every request goes through apiFetch, which always passes an init
+    // object so the API key header can be attached.
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/plans/abc")
+      expect.stringContaining("/plans/abc"),
+      expect.any(Object)
     );
   });
 

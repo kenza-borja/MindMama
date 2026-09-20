@@ -1,0 +1,45 @@
+# Render Blueprint: deploys the AI orchestrator and the Node API together.
+#
+# The web app is NOT here - it is a static export that goes to Vercel or
+# Netlify. See docs/DEPLOY.md.
+#
+# Values marked `sync: false` are not stored in this file and must be entered
+# in the Render dashboard. Never commit secrets here.
+
+services:
+  - type: web
+    name: mindmama-ai
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn ai.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        sync: false
+
+  - type: web
+    name: mindmama-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    # Exempt from the API key check so Render can tell the service is alive.
+    healthCheckPath: /health
+    envVars:
+      # Render generates this once; copy it into the web app's
+      # EXPO_PUBLIC_API_KEY so the two agree.
+      - key: API_KEY
+        generateValue: true
+      # Internal URL of the AI service above.
+      - key: AI_URL
+        sync: false
+      # The Firebase service account JSON, pasted as a single line.
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      # The deployed web app's origin, e.g. https://mindmama.vercel.app
+      - key: ALLOWED_ORIGINS
+        sync: false
